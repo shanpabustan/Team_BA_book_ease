@@ -1,0 +1,80 @@
+name: book_ease
+description: "Ang Book ko ay Book ng lahat"
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  animations: ^2.0.11
+  flutter:
+    sdk: flutter
+  speech_to_text: ^7.0.0
+  # cupertino_icons: ^1.0.2
+  google_fonts: ^6.1.0
+  google_nav_bar: ^5.0.7
+  intl: ^0.20.2
+  line_icons: ^2.0.3
+  image_picker: ^1.1.2
+  permission_handler: ^11.4.0
+  dio: ^5.8.0+1
+  provider: ^6.1.4
+  file_picker: ^10.0.0
+  fl_chart: ^0.70.2
+  flutter_animate: ^4.5.2
+  flutter_glow: ^0.3.2
+  fluttertoast: ^8.2.2 # Use latest version if available
+  awesome_snackbar_content: ^0.1.1
+  data_table_2: ^2.6.0
+  flutter_svg: ^1.1.6
+  faker: ^2.2.0
+    
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/logo.png
+    - assets/images/logo-removebg-preview.png
+    - assets/images/banner.jpg
+    - assets/images/percy-book.jpg
+    - assets/images/admin_logo.png
+    - assets/images/harry-book.jpg
+    - assets/images/bini.jpg
+    - assets/images/pulgoso.jpg
+    - assets/images/admin_logo_green.png
+    - assets/images/admin_logo_white.png
+    - assets/icons/j-rizz.png
+    - assets/icons/boy-icon.png
+    - assets/icons/girl-icon.png
+    - assets/icons/girl-2.png
+    - assets/icons/reading_book.png
+    - assets/icons/student-boy.png
+    - assets/icons/bubbles.svg
+    - assets/icons/fail.svg
+    - assets/icons/check.svg
+    - assets/icons/info.svg
+    - assets/icons/warning.svg
+    - assets/icons/error.svg
+    
+
+# flutter:
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins-ExtraBold.ttf
+          weight: 800
+
+
+         
+
+        

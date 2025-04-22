@@ -1,0 +1,48 @@
+// {
+// "editor.tokenColorCustomizations": {
+//   "textMateRules": [
+//     {
+//       "scope": "keyword", // if, else, return, etc.
+//       "settings": {
+//         "foreground": "#CBA6F7" // Soft Purple
+//       }
+//     },
+//     {
+//       "scope": "variable", // let, const, etc.
+//       "settings": {
+//         "foreground": "#FFD166" // Rapunzel Gold
+//       }
+//     },
+//     {
+//       "scope": "string", // "text", 'quotes', etc.
+//       "settings": {
+//         "foreground": "#FF9AC1" // Rosy Pink
+//       }
+//     },
+//     {
+//       "scope": "constant.numeric", // numbers
+//       "settings": {
+//         "foreground": "#F4BFFF" // Lavender Pink
+//       }
+//     },
+//     {
+//       "scope": "comment", // // notes
+//       "settings": {
+//         "foreground": "#E0AED0", // Dusty Pink
+//         "fontStyle": "italic"
+//       }
+//     },
+//     {
+//       "scope": "entity.name.function", // function names
+//       "settings": {
+//         "foreground": "#D6ACFF" // Light Orchid
+//       }
+//     }
+//   ]
+  
+// }
+
+
+    
+    
+// }
