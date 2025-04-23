@@ -13,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/book_provider.dart'; 
 import 'package:book_ease/provider/user_data.dart';
+import 'package:book_ease/provider/notification_service.dart';
 import 'package:book_ease/screens/user/home/book_details_modal.dart';
 
 
@@ -72,18 +73,42 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  
   bool _showNotifications = false;
+  bool _isFetchingNotifs = true; // Track if notifications are being fetched
+  List<AppNotification> _notifications = [];
   final TextEditingController _searchController = TextEditingController();
 
-  void _toggleNotificationOverlay() {
+   void _toggleNotificationOverlay() {
     setState(() {
       _showNotifications = !_showNotifications;
     });
   }
 
+  // Fetch notifications for the user
+  void _fetchNotifications() async {
+    try {
+      final userId = Provider.of<UserData>(context, listen: false).userID;
+      final service = NotificationService();
+      final notifs = await service.fetchNotifications(userId);
+
+      setState(() {
+        _notifications = notifs;
+        _isFetchingNotifs = false; // Stop loading once data is fetched
+      });
+    } catch (e) {
+      print('Notification fetch error: $e');
+      setState(() {
+        _isFetchingNotifs = false; // Stop loading in case of error
+      });
+    }
+  }
+  
+
 @override
 void initState() {
   super.initState();
+  _fetchNotifications(); // Fetch notifications when screen loads
   Future.microtask(() {
     final userId = Provider.of<UserData>(context, listen: false).userID;
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
@@ -130,7 +155,9 @@ void initState() {
         if (_showNotifications)
           NotificationOverlay(
             onClose: _toggleNotificationOverlay,
-            notifications: dummyNotifications,
+            notifications: _isFetchingNotifs
+                ? [] // Show empty list if still fetching
+                : _notifications, // Show fetched notifications
           ),
       ],
     );

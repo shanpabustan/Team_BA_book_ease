@@ -35,7 +35,8 @@ class ReservationScreen extends StatefulWidget {
 }
 
 class _ReservationScreenState extends State<ReservationScreen> {
-  late TableController<Map<String, String>> controller;
+  late TableController<Map<String, String>>? controller;
+  bool isLoading = true;
 
  @override
     void initState() {
@@ -64,14 +65,20 @@ class _ReservationScreenState extends State<ReservationScreen> {
           dataList: parsedList,
           onPageChange: () => setState(() {}),
         );
+        isLoading = false;
       });
     } catch (e) {
       print('Error fetching reservations: $e');
+      if (!mounted) return;
+      setState(() => isLoading = false);
     }
   }
   
   @override
   Widget build(BuildContext context) {
+     if (isLoading || controller == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6F9),
       body: Padding(
@@ -81,7 +88,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
             Row(
               children: [
                 ActionButtonRow(
-                  isButtonEnabled: controller.isButtonEnabled,
+                  isButtonEnabled: controller!.isButtonEnabled,
                   onPdfPressed: () {
                     // TODO: PDF export logic
                   },
@@ -108,8 +115,8 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       child: SingleChildScrollView(
                         scrollDirection: Axis.vertical,
                         child: DataTable(
-                          sortColumnIndex: controller.sortColumnIndex,
-                          sortAscending: controller.ascending,
+                          sortColumnIndex: controller!.sortColumnIndex,
+                          sortAscending: controller!.ascending,
                           headingRowColor: MaterialStateColor.resolveWith(
                             (_) => const Color(
                                 0xFFB8D9D6), // A darker shade of the original color
@@ -117,9 +124,9 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           columns: [
                             DataColumn(
                               label: Checkbox(
-                                value: controller.isAllSelected,
+                                value: controller!.isAllSelected,
                                 onChanged: (value) =>
-                                    controller.toggleSelectAll(
+                                    controller!.toggleSelectAll(
                                         value, () => setState(() {})),
                                 activeColor:
                                     Colors.teal, // Change fill color to teal
@@ -127,7 +134,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ),
                             DataColumn(
                               label: buildSortableColumnLabel('Reservation ID'),
-                              onSort: (i, asc) => controller.sort(
+                              onSort: (i, asc) => controller!.sort(
                                   (d) => d['reservationId']!,
                                   i,
                                   asc,
@@ -135,7 +142,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ),
                             DataColumn(
                               label: buildSortableColumnLabel('User Name'),
-                              onSort: (i, asc) => controller.sort(
+                              onSort: (i, asc) => controller!.sort(
                                   (d) => d['userName']!,
                                   i,
                                   asc,
@@ -143,7 +150,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ),
                             DataColumn(
                               label: buildSortableColumnLabel('Book Title'),
-                              onSort: (i, asc) => controller.sort(
+                              onSort: (i, asc) => controller!.sort(
                                   (d) => d['bookTitle']!,
                                   i,
                                   asc,
@@ -152,7 +159,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             DataColumn(
                               label:
                                   buildSortableColumnLabel('Pickup Date'),
-                              onSort: (i, asc) => controller.sort(
+                              onSort: (i, asc) => controller!.sort(
                                   (d) => d['preferredPickupDate']!,
                                   i,
                                   asc,
@@ -160,7 +167,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                             ),
                             DataColumn(
                               label: buildSortableColumnLabel('Status'),
-                              onSort: (i, asc) => controller.sort(
+                              onSort: (i, asc) => controller!.sort(
                                   (d) => d['status']!,
                                   i,
                                   asc,
@@ -172,15 +179,15 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                       TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ],
-                          rows: List.generate(controller.currentPageData.length,
+                          rows: List.generate(controller!.currentPageData.length,
                               (index) {
                             final reservation =
-                                controller.currentPageData[index];
-                            final actualIndex = controller.currentPage *
-                                    controller.rowsPerPage +
+                                controller!.currentPageData[index];
+                            final actualIndex = controller!.currentPage *
+                                    controller!.rowsPerPage +
                                 index;
                             final isSelected =
-                                controller.selectedRows[actualIndex];
+                                controller!.selectedRows[actualIndex];
 
                             return DataRow(
                               color: MaterialStateColor.resolveWith(
@@ -199,7 +206,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
                                   Checkbox(
                                     value: isSelected,
                                     onChanged: (val) {
-                                      controller.toggleSingleRowSelection(
+                                      controller!.toggleSingleRowSelection(
                                           index, () => setState(() {}));
                                     },
                                     activeColor: Colors.teal,
@@ -282,15 +289,15 @@ class _ReservationScreenState extends State<ReservationScreen> {
               ),
             ),
             PaginationWidget(
-              currentPage: controller.currentPage,
-              rowsPerPage: controller.rowsPerPage,
-              totalRows: controller.dataList.length,
-              onFirstPage: controller.paginationController.firstPage,
-              onPreviousPage: controller.paginationController.previousPage,
-              onNextPage: controller.paginationController.nextPage,
-              onLastPage: controller.paginationController.lastPage,
+              currentPage: controller!.currentPage,
+              rowsPerPage: controller!.rowsPerPage,
+              totalRows: controller!.dataList.length,
+              onFirstPage: controller!.paginationController.firstPage,
+              onPreviousPage: controller!.paginationController.previousPage,
+              onNextPage: controller!.paginationController.nextPage,
+              onLastPage: controller!.paginationController.lastPage,
               onRowsPerPageChanged: (value) {
-                controller.updateRowsPerPage(value,
+                controller!.updateRowsPerPage(value,
                     () => setState(() {})); // Properly updating rows per page
               },
             )
