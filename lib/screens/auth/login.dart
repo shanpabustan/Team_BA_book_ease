@@ -69,13 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
         debugPrint("Response Data: ${response.data}");
 
-        // Show success message
-        // if (mounted) {
-        //   ScaffoldMessenger.of(context).showSnackBar(
-        //     const SnackBar(content: Text("Login Successful!")),
-        //   );
-        // }
-
         if (mounted) {
           showSuccessSnackBar(
             context,

@@ -7,19 +7,22 @@ class ViewUserModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      backgroundColor: Colors.white,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor:
+          Colors.black.withOpacity(0.3), // Semi-transparent backdrop
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header Row with Title centered and Close button on the right
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -35,29 +38,28 @@ class ViewUserModal extends StatelessWidget {
                     Positioned(
                       right: 0,
                       child: IconButton(
-                        padding: EdgeInsets.zero, // Remove extra padding
-                        constraints:
-                            const BoxConstraints(), // Remove default IconButton constraints
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         icon: CircleAvatar(
-                          radius: 14, // Smaller radius (default is 20)
-                          backgroundColor: AdminColor
-                              .secondaryBackgroundColor, // Change to your desired color
+                          radius: 14,
+                          backgroundColor: AdminColor.secondaryBackgroundColor,
                           child: const Icon(Icons.close,
-                              size: 16,
-                              color: Colors.white), // Smaller icon size
+                              size: 20, color: Colors.white),
                         ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
                   ],
                 ),
-               const SizedBox(height: 24),
-              _buildTextField(label: 'User ID', value: user['userId'] ?? ''),
-              _buildTextField(label: 'Full Name', value: user['name'] ?? ''),
-              _buildTextField(label: 'Phone Number', value: user['phoneNumber'] ?? ''),
-              _buildTextField(label: 'Email', value: user['email'] ?? ''),
-              _buildTextField(label: 'Year Level', value: user['yearLevel'] ?? ''),
-              _buildTextField(label: 'Course', value: user['course'] ?? ''),
+                const SizedBox(height: 24),
+                _buildTextField(label: 'User ID', value: user['userId'] ?? ''),
+                _buildTextField(label: 'Full Name', value: user['name'] ?? ''),
+                _buildTextField(
+                    label: 'Phone Number', value: user['phoneNumber'] ?? ''),
+                _buildTextField(label: 'Email', value: user['email'] ?? ''),
+                _buildTextField(
+                    label: 'Year Level', value: user['yearLevel'] ?? ''),
+                _buildTextField(label: 'Course', value: user['course'] ?? ''),
               ],
             ),
           ),
@@ -88,14 +90,14 @@ class ViewUserModal extends StatelessWidget {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                    color: AdminColor.secondaryBackgroundColor, width: 2),
+                    color: AdminColor.secondaryBackgroundColor, width: 1),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               filled: true,
               fillColor: Colors.grey[200],
             ),
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.black87,
               fontSize: 16,
             ),

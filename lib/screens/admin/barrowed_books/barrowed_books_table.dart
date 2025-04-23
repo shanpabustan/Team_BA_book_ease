@@ -1,8 +1,10 @@
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_books_data.dart';
+import 'package:book_ease/screens/admin/barrowed_books/barrowed_return_modal.dart';
 import 'package:book_ease/screens/admin/components/paginated_table.dart';
 import 'package:book_ease/screens/admin/components/action_buttons.dart';
 import 'package:book_ease/screens/admin/components/search_admin.dart';
 import 'package:book_ease/screens/admin/components/table_controller.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -202,10 +204,31 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                                       message: 'Return',
                                       child: IconButton(
                                         icon: const Icon(Icons.library_books,
-                                            size:
-                                                20), // Changed to a book-related icon
-                                        onPressed: () {
-                                          // TODO: Return borrowed book logic
+                                            size: 20),
+                                        onPressed: () async {
+                                          final Map<String, dynamic>
+                                              selectedBook =
+                                              borrowedBooksData[actualIndex];
+
+                                          final result = await showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (context) =>
+                                                ReturnBookModal(
+                                                    returnData: selectedBook),
+                                          );
+
+                                          if (result != null &&
+                                              result['success'] == true) {
+                                            if (context.mounted) {
+                                              showSuccessSnackBar(
+                                                context,
+                                                title: 'Success!',
+                                                message:
+                                                    'Book returned successfully.',
+                                              );
+                                            }
+                                          }
                                         },
                                       ),
                                     ),
@@ -236,13 +259,6 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
           ],
         ),
       ),
-    );
-  }
-  
-  Widget buildBarrowedStatusChip(String s) {
-    return Chip(
-      label: Text(s),
-      backgroundColor: Colors.teal.shade100,
     );
   }
 }

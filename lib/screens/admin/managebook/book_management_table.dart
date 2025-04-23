@@ -241,7 +241,8 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
                                       DataCell(Text(book['author']!)),
                                       DataCell(Text(book['year']!)),
                                       DataCell(Text(book['category']!)),
-                                      DataCell(Text(book['condition']!)),
+                                      DataCell(buildBooksStatusChip(
+                                          book['condition']!)),
                                       DataCell(Row(
                                         children: [
                                           Tooltip(

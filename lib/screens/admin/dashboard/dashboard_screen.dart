@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../components/sidebar.dart';
 import '../components/adminapp_bar.dart';
-import '../calendar/calendar_main.dart';
+import '../settings_folder/settings_index.dart';
 import '../managebook/manage_books_index.dart';
 import '../reservation/reservation_index.dart';
 import '../usermanagement/manage_user_index.dart';
@@ -40,8 +40,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     "Manage Books",
     "Manage Users",
     "Reservation Overview",
-    "Calendar Schedule",
     "Borrowed Books",
+    "Settings",
   ];
 
   final List<Widget> _contentScreens = [
@@ -49,8 +49,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ManageBook(),
     ManageUser(),
     ReservationMain(),
-    CalendarMain(),
     BorrowedBooksMain(),
+    SettingsMain(),
   ];
 
   List<Widget> get _screensWithAppBar =>
