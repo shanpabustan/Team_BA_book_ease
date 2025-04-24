@@ -215,6 +215,19 @@ void showUnblockModal(BuildContext context) {
   );
 }
 
+// Build Book Condition chip based on the status value
+ Widget buildBooksStatusChip(String status) {
+   final color = status == 'New' ? Colors.green : Colors.orange;
+   return Container(
+     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+     decoration: BoxDecoration(
+       color: color.withOpacity(0.2),
+       borderRadius: BorderRadius.circular(8),
+     ),
+     child: Text(status, style: TextStyle(color: color)),
+   );
+ }
+
 // Build reservation status chip based on the status value
 Widget buildReservationStatusChip(String status) {
   final color = status == 'Approved'
@@ -247,6 +260,34 @@ Widget buildUserStatusChip(String status) {
   );
 }
 
+// Build Barrowed Books Status chip based on the status value
+ Widget buildBarrowedStatusChip(String status) {
+   final Map<String, Color> statusColors = {
+     'Pending': Colors.orange, // Awaiting approval
+     'Approved': Colors.blue, // Approved and ready
+     'Returned': Colors.green, // Successfully returned
+     'Overdue': Colors.red, // Late return
+     'Damaged': Colors.brown, // Item not in good condition
+   };
+ 
+   final color = statusColors[status] ?? Colors.grey;
+ 
+   return Container(
+     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+     decoration: BoxDecoration(
+       color: color.withOpacity(0.2),
+       borderRadius: BorderRadius.circular(8),
+     ),
+     child: Text(
+       status,
+       style: TextStyle(
+         color: color,
+         fontWeight: FontWeight.w500,
+       ),
+     ),
+   );
+ }
+ 
 // Build sortable column label with an icon
 Widget buildSortableColumnLabel(String label) {
   return Row(
