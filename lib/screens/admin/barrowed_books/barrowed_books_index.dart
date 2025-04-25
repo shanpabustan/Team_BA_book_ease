@@ -13,6 +13,7 @@ class BorrowedBooksMain extends StatefulWidget {
 class _BorrowedBooksMainState extends State<BorrowedBooksMain> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +27,7 @@ class _BorrowedBooksMainState extends State<BorrowedBooksMain> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Borrowed Books Table Section
-              Expanded(
+              const Expanded(
                 child: BorrowedBooksTable(), // BorrowedBooksTable widget
               ),
               const SizedBox(height: 20),

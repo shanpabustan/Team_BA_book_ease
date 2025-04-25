@@ -172,7 +172,7 @@ import 'package:flutter/material.dart';
              onChanged: (value) {
                setState(() {
                  selectedCondition = value;
-                 isPenaltyEditable = ['Fair', 'Poor', 'Damaged'].contains(value);
+                 isPenaltyEditable = ['Damaged'].contains(value);
                  if (!isPenaltyEditable) {
                    _penaltyController.text = '0';
                  }

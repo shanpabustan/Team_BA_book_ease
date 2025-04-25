@@ -1,4 +1,5 @@
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_books_data.dart';
+import 'package:book_ease/base_url.dart';
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_return_modal.dart';
 import 'package:book_ease/screens/admin/components/paginated_table.dart';
 import 'package:book_ease/screens/admin/components/action_buttons.dart';
@@ -7,6 +8,9 @@ import 'package:book_ease/screens/admin/components/table_controller.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dio/dio.dart';
+
+
 
 class BorrowedBooksTable extends StatelessWidget {
   const BorrowedBooksTable({super.key});
@@ -31,16 +35,52 @@ class BorrowedBooksScreen extends StatefulWidget {
 }
 
 class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
-  late TableController<Map<String, dynamic>> controller;
+  late TableController<BorrowedBookAdmin> controller;
 
-  @override
-  void initState() {
-    super.initState();
-    controller = TableController<Map<String, dynamic>>(
-      dataList: List.from(borrowedBooksData),
-      onPageChange: () => setState(() {}),
-    );
+
+ @override
+void initState() {
+  super.initState();
+
+  controller = TableController<BorrowedBookAdmin>(
+  dataList: [],
+  onPageChange: () => setState(() {}),
+);
+
+  _loadBorrowedBooks();
+}
+
+void _loadBorrowedBooks() async {
+  try {
+    final response = await Dio().get('${ApiConfig.baseUrl}/admin/get-borrowed-books');
+
+    if (response.statusCode == 200) {
+      print('📦 Raw response data: ${response.data}');
+
+      try {
+        final List<BorrowedBookAdmin> borrowedBooks = (response.data as List)
+            .where((item) => item != null)
+            .map<BorrowedBookAdmin>((item) => BorrowedBookAdmin.fromJson(item))
+            .toList();
+
+        print('✅ Mapped borrowed books: $borrowedBooks');
+
+        setState(() {
+          controller.dataList = borrowedBooks;
+          controller.refresh();
+        });
+      } catch (e) {
+        print('❌ Error processing borrowed books data: $e');
+      }
+    } else {
+      throw Exception('Failed to fetch data: ${response.statusCode}');
+    }
+  } catch (e) {
+    print("❌ Error loading borrowed books: $e");
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +138,8 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                             DataColumn(
                               label: buildSortableColumnLabel('Borrow ID'),
                               onSort: (i, asc) => controller.sort(
-                                (d) => d['borrowID'].toString(),
+                                (d) => d.borrowID.toString(),
+
                                 i,
                                 asc,
                                 () => setState(() {}),
@@ -107,7 +148,7 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                             DataColumn(
                               label: buildSortableColumnLabel('User ID'),
                               onSort: (i, asc) => controller.sort(
-                                (d) => d['userID'].toString(),
+                                (d) => d.userID.toString(),
                                 i,
                                 asc,
                                 () => setState(() {}),
@@ -116,7 +157,7 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                             DataColumn(
                               label: buildSortableColumnLabel('Name'),
                               onSort: (i, asc) => controller.sort(
-                                (d) => d['name'].toString(),
+                                (d) => d.name.toString(),
                                 i,
                                 asc,
                                 () => setState(() {}),
@@ -125,7 +166,7 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                             DataColumn(
                               label: buildSortableColumnLabel('Book Name'),
                               onSort: (i, asc) => controller.sort(
-                                (d) => d['bookName'].toString(),
+                                (d) => d.bookName.toString(),
                                 i,
                                 asc,
                                 () => setState(() {}),
@@ -134,7 +175,7 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                             DataColumn(
                               label: buildSortableColumnLabel('Status'),
                               onSort: (i, asc) => controller.sort(
-                                (d) => d['status'].toString(),
+                                (d) => d.status.toString(),
                                 i,
                                 asc,
                                 () => setState(() {}),
@@ -153,79 +194,63 @@ class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
                             final actualIndex = controller.currentPage *
                                     controller.rowsPerPage +
                                 index;
-                            final isSelected =
-                                controller.selectedRows[actualIndex];
+                           final isSelected = actualIndex < controller.selectedRows.length
+                          ? controller.selectedRows[actualIndex]
+                          : false;
 
                             return DataRow(
                               color: MaterialStateColor.resolveWith((states) {
                                 if (isSelected) return Colors.teal.shade50;
-                                return index.isEven
-                                    ? Colors.transparent
-                                    : Colors.grey.shade100;
+                                return index.isEven ? Colors.transparent : Colors.grey.shade100;
                               }),
                               cells: [
                                 DataCell(
                                   Checkbox(
                                     value: isSelected,
                                     onChanged: (val) {
-                                      controller.toggleSingleRowSelection(
-                                          index, () => setState(() {}));
+                                      controller.toggleSingleRowSelection(index, () => setState(() {}));
                                     },
                                     activeColor: Colors.teal,
                                   ),
                                 ),
-                                DataCell(Text(
-                                    borrowedBook['borrowID']?.toString() ??
-                                        '')),
-                                DataCell(Text(
-                                    borrowedBook['userID']?.toString() ?? '')),
+                                DataCell(Text(borrowedBook.borrowID.toString())),
+                                DataCell(Text(borrowedBook.userID)),
                                 DataCell(SizedBox(
-                                  width:
-                                      190, // Adjust width based on your design
+                                  width: 190,
                                   child: Text(
-                                    borrowedBook['name']?.toString() ?? '',
+                                    borrowedBook.name,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                   ),
                                 )),
                                 DataCell(SizedBox(
-                                  width: 250, // Adjust width as needed
+                                  width: 250,
                                   child: Text(
-                                    borrowedBook['bookName']?.toString() ?? '',
+                                    borrowedBook.bookName,
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                   ),
                                 )),
-                                DataCell(buildBarrowedStatusChip(
-                                    borrowedBook['status']?.toString() ?? '')),
+                                DataCell(buildBarrowedStatusChip(borrowedBook.status)),
                                 DataCell(Row(
                                   children: [
                                     Tooltip(
                                       message: 'Return',
                                       child: IconButton(
-                                        icon: const Icon(Icons.library_books,
-                                            size: 20),
+                                        icon: const Icon(Icons.library_books, size: 20),
                                         onPressed: () async {
-                                          final Map<String, dynamic>
-                                              selectedBook =
-                                              borrowedBooksData[actualIndex];
-
                                           final result = await showDialog(
                                             context: context,
                                             barrierDismissible: false,
-                                            builder: (context) =>
-                                                ReturnBookModal(
-                                                    returnData: selectedBook),
+                                            builder: (context) => ReturnBookModal(returnData: borrowedBook),
                                           );
 
-                                          if (result != null &&
-                                              result['success'] == true) {
+                                          if (result != null && result['success'] == true) {
                                             if (context.mounted) {
                                               showSuccessSnackBar(
                                                 context,
                                                 title: 'Success!',
-                                                message:
-                                                    'Book returned successfully.',
+                                                message: 'Book returned successfully.',
                                               );
                                             }
                                           }

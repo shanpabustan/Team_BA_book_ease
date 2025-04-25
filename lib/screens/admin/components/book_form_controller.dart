@@ -8,6 +8,10 @@ import 'package:book_ease/utils/warning_snack_bar.dart';
 class BookFormController {
   // Image
   File? pickedImage;
+  Uint8List? _webImageBytes;
+
+  Uint8List? get webImageBytes => _webImageBytes;
+
 
   // Form Fields
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -27,32 +31,38 @@ class BookFormController {
   String? selectedCategory;
   String? selectedCondition;
 
-  void pickImage(BuildContext context, VoidCallback onImagePicked) async {
-    if (!kIsWeb) {
-      var status = await Permission.photos.request();
-      if (!status.isGranted) {
-        showWarningSnackBar(
-          context,
-          title: 'Permission Denied',
-          message:
-              'Photo permission is not granted. Please enable it to proceed.',
-        );
-        return;
-      }
-    }
-
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && result.files.single.path != null) {
-      pickedImage = File(result.files.single.path!);
-      onImagePicked(); // Notify state update
-    } else {
+void pickImage(BuildContext context, StateSetter setState) async {
+  if (!kIsWeb) {
+    var status = await Permission.photos.request();
+    if (!status.isGranted) {
       showWarningSnackBar(
         context,
-        title: 'Image Not Selected',
-        message: 'Please select an image to proceed.',
+        title: 'Permission Denied',
+        message: 'Photo permission is not granted. Please enable it to proceed.',
       );
+      return;
     }
   }
+
+  final result = await FilePicker.platform.pickFiles(type: FileType.image);
+
+  if (result != null && result.files.single.path != null) {
+    setState(() {
+      if (kIsWeb) {
+        _webImageBytes = result.files.single.bytes;
+        pickedImage = File(''); // Dummy file
+      } else {
+        pickedImage = File(result.files.single.path!);
+      }
+    });
+  } else {
+    showWarningSnackBar(
+      context,
+      title: 'Image Not Selected',
+      message: 'Please select an image to proceed.',
+    );
+  }
+}
 
   void clearAll(VoidCallback onClearState) {
     formKey.currentState?.reset();

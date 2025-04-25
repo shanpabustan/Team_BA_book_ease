@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'book_data.dart'; // Book and BorrowedBook models
 
+
+
 class BookProvider with ChangeNotifier {
   List<Book> _books = [];
   List<BorrowedBook> _borrowedBooks = [];
+
   bool _isLoading = false;
 
   List<Book> get books => _books;
   List<BorrowedBook> get borrowedBooks => _borrowedBooks;
+
   bool get isLoading => _isLoading;
 
   Future<void> fetchBooks() async {
@@ -46,4 +50,7 @@ class BookProvider with ChangeNotifier {
       print('Error fetching borrowed books: $e');
     }
   }
+
+
+
 }

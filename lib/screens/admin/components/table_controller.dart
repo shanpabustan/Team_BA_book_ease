@@ -47,13 +47,11 @@ class TableController<T> {
   }
 
   // Get current page data based on pagination
-  List<T> get currentPageData {
-    int start = currentPage * rowsPerPage;
-    int end = (start + rowsPerPage > dataList.length)
-        ? dataList.length
-        : start + rowsPerPage;
-    return dataList.sublist(start, end);
-  }
+ List<T> get currentPageData {
+  int start = currentPage * rowsPerPage;
+  int end = (start + rowsPerPage).clamp(0, dataList.length);
+  return dataList.sublist(start, end);
+}
 
   // Sort data based on column index and order (ascending/descending)
   void sort<K>(Comparable<K> Function(T d) getField, int columnIndex, bool asc,
@@ -153,6 +151,12 @@ class TableController<T> {
     currentPage = 0;
     setState();
   }
+
+  void updateData(List<Map<String, String>> borrowedBooks) {}
+
+  void onPageChange() {}
+
+  void refresh() {}
 }
 
 // PaginationController class for handling page changes
