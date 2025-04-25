@@ -14,7 +14,7 @@ class DashboardTheme {
   static const Color primaryTextColor = Colors.black87;
   static const Color secondaryTextColor = Colors.grey;
   static const Color cardBackground = Colors.white;
-  static const Color pageBackground = Colors.white;
+  static const Color pageBackground = Color.fromRGBO(248, 244, 243, 1.0);
 }
 
 class AdminDashboard extends StatefulWidget {

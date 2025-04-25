@@ -1,3 +1,4 @@
+import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -45,14 +46,16 @@ mixin ReturnController<T extends StatefulWidget> on State<T> {
                 builder: (context, child) {
                   return Theme(
                     data: Theme.of(context).copyWith(
-                      colorScheme: const ColorScheme.light(
-                        primary: Colors.teal, // Header background
+                      colorScheme: ColorScheme.light(
+                        primary: AdminColor
+                            .secondaryBackgroundColor, // Header background
                         onPrimary: Colors.white, // Header text
                         onSurface: Colors.black, // Calendar day text
                       ),
                       textButtonTheme: TextButtonThemeData(
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.teal, // Button text
+                          foregroundColor: AdminColor
+                              .secondaryBackgroundColor, // Button text
                         ),
                       ),
                     ),
@@ -82,9 +85,10 @@ mixin ReturnController<T extends StatefulWidget> on State<T> {
                   hintText: 'Select Return Date',
                   filled: true,
                   fillColor: Colors.white,
-                  suffixIcon: const Icon(
+                  suffixIcon: Icon(
                     Icons.calendar_today,
-                    color: Colors.teal,
+                    color: AdminColor
+                        .secondaryBackgroundColor, // Calendar icon color
                     size: 18,
                   ),
                   contentPadding:
@@ -93,7 +97,7 @@ mixin ReturnController<T extends StatefulWidget> on State<T> {
                     borderRadius: BorderRadius.circular(6),
                     borderSide: BorderSide(
                       color: selectedReturnDate != null
-                          ? Colors.teal
+                          ? AdminColor.secondaryBackgroundColor // Border color
                           : Colors.grey.shade400,
                     ),
                   ),
@@ -101,14 +105,15 @@ mixin ReturnController<T extends StatefulWidget> on State<T> {
                     borderRadius: BorderRadius.circular(6),
                     borderSide: BorderSide(
                       color: selectedReturnDate != null
-                          ? Colors.teal
+                          ? AdminColor.secondaryBackgroundColor // Border color
                           : Colors.grey.shade300,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: const BorderSide(
-                      color: Colors.teal,
+                    borderSide: BorderSide(
+                      color: AdminColor
+                          .secondaryBackgroundColor, // Focused border color
                       width: 1.5,
                     ),
                   ),

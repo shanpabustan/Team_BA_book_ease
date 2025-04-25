@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_glow/flutter_glow.dart';
 import 'package:book_ease/modals/logout_modal.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Sidebar extends StatefulWidget {
   final int selectedIndex;
@@ -29,7 +30,12 @@ class _SidebarState extends State<Sidebar> {
         onLogout: () {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Logged out successfully.")),
+            SnackBar(
+              content: Text(
+                "Logged out successfully.",
+                style: GoogleFonts.poppins(),
+              ),
+            ),
           );
         },
       ),
@@ -41,8 +47,7 @@ class _SidebarState extends State<Sidebar> {
     final isSelected = widget.selectedIndex == index;
     final showText = _isHovered;
 
-    // Default color when not hovered
-    Color iconColor = Color.fromRGBO(212, 216, 220, 1); // #9AA6B2
+    Color iconColor = const Color.fromRGBO(212, 216, 220, 1); // Default color
     if (isHovered || isSelected) {
       iconColor = Colors.white;
     }
@@ -90,9 +95,9 @@ class _SidebarState extends State<Sidebar> {
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         softWrap: false,
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: iconColor, // Same color as the icon
+                          color: iconColor,
                         ),
                       ),
                     ),
@@ -107,8 +112,7 @@ class _SidebarState extends State<Sidebar> {
 
   @override
   Widget build(BuildContext context) {
-    final sidebarWidth =
-        _isHovered ? 218.0 : 70.0; // Adjusted to prevent overflow
+    final sidebarWidth = _isHovered ? 218.0 : 70.0;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

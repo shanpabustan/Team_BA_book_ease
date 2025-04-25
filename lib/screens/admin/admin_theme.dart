@@ -20,8 +20,9 @@ class AdminColor {
       Color.fromRGBO(51, 53, 54, 1); // Sidebar
 
   // Border Colors
-  static const Color borderColor =
-      Color.fromRGBO(220, 220, 220, 1); // Light gray border
+  static const Color borderColor = Color.fromRGBO(220, 220, 220, 1);
+
+  static var primaryColor; // Light gray border
 }
 
 class AdminFontSize {
