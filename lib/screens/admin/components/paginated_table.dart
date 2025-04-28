@@ -32,13 +32,13 @@ class PaginationWidget extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-          vertical: 8.0, horizontal: 16.0), // Added vertical padding
+          vertical: 0, horizontal: 16.0), // Added vertical padding
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              const Text('Rows per page: ', style: TextStyle(fontSize: 16)),
+              const Text('Rows per page: ', style: TextStyle(fontSize: 13)),
               DropdownButton<int>(
                 value: rowsPerPage,
                 onChanged: (value) {
@@ -50,13 +50,13 @@ class PaginationWidget extends StatelessWidget {
                   return DropdownMenuItem<int>(
                     value: value,
                     child: Text(value.toString(),
-                        style: const TextStyle(fontSize: 16)),
+                        style: const TextStyle(fontSize: 13)),
                   );
                 }).toList(),
               ),
               const SizedBox(width: 16),
               Text('$start–$end of $totalRows',
-                  style: const TextStyle(fontSize: 16)),
+                  style: const TextStyle(fontSize: 13)),
             ],
           ),
           Row(

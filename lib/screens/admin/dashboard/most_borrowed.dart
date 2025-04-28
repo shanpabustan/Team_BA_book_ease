@@ -19,6 +19,34 @@ class MostBorrowedBooks extends StatelessWidget {
     },
   ];
 
+  // Get the color and label for the badge based on the rank
+  int getBadgeLabel(int rank) {
+    switch (rank) {
+      case 0:
+        return 1; // Return 1 for first rank
+      case 1:
+        return 2; // Return 2 for second rank
+      case 2:
+        return 3; // Return 3 for third rank
+      default:
+        return rank +
+            1; // For books not in the top 3, return the rank number (rank starts from 0, so adding 1 makes it a natural ranking)
+    }
+  }
+
+  Color getBadgeColor(int rank) {
+    switch (rank) {
+      case 0:
+        return Colors.amber; // Gold
+      case 1:
+        return Colors.grey; // Silver
+      case 2:
+        return Colors.brown; // Bronze
+      default:
+        return Colors.blueGrey; // Default color for other ranks
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -32,7 +60,7 @@ class MostBorrowedBooks extends StatelessWidget {
         color: DashboardTheme.cardBackground,
         child: Padding(
           padding: EdgeInsets.symmetric(
-              vertical: 30, horizontal: 20), // Inner padding
+              vertical: 30, horizontal: 30), // Inner padding
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -54,21 +82,40 @@ class MostBorrowedBooks extends StatelessWidget {
                           padding: EdgeInsets.symmetric(vertical: 5),
                           child: Row(
                             children: [
+                              // Badge before the image
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: getBadgeColor(entry
+                                      .key), // Gold, Silver, Bronze, or Default
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  getBadgeLabel(entry.key)
+                                      .toString(), // Convert int to string for displaying
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 15),
                               // Image with design
                               ClipRRect(
-                                borderRadius:
-                                    BorderRadius.circular(8), // Rounded corners
+                                borderRadius: BorderRadius.circular(8),
                                 child: Image.asset(
                                   entry.value['image']!,
-                                  width: 50,
-                                  height: 50,
+                                  width: 50, // Adjust width as needed
+                                  height: 60, // Adjust height as needed
                                   fit: BoxFit.cover,
                                 ),
                               ),
                               SizedBox(width: 15),
                               // Book Title
                               Text(
-                                '${entry.key + 1}. ${entry.value['title']}', // Auto-numbering
+                                entry.value['title']!,
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: DashboardTheme.secondaryTextColor,

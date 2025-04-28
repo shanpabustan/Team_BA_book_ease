@@ -21,7 +21,7 @@ class _BorrowedBooksMainState extends State<BorrowedBooksMain> {
       body: Padding(
         padding: const EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0),
         child: Container(
-          color: Colors.white,
+          color: Colors.transparent,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

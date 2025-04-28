@@ -2,6 +2,7 @@ import 'package:book_ease/modals/unblock_data_modal.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
 
+/// Table Controller to manage paginated, sortable, selectable table data
 class TableController<T> {
   late PaginationController paginationController;
   int currentPage = 0;
@@ -13,7 +14,6 @@ class TableController<T> {
 
   List<T> dataList;
   List<bool> selectedRows = [];
-
   List<int> rowsPerPageOptions = [];
 
   TableController({
@@ -33,10 +33,9 @@ class TableController<T> {
         onPageChange();
       },
     );
-    _generateRowsPerPageOptions(); // Generate dynamic rows per page options
+    _generateRowsPerPageOptions();
   }
 
-  // Dynamically generate rows per page options based on the total data length
   void _generateRowsPerPageOptions() {
     rowsPerPageOptions = [10];
     int increment = 10;
@@ -46,7 +45,6 @@ class TableController<T> {
     }
   }
 
-  // Get current page data based on pagination
   List<T> get currentPageData {
     int start = currentPage * rowsPerPage;
     int end = (start + rowsPerPage > dataList.length)
@@ -55,9 +53,12 @@ class TableController<T> {
     return dataList.sublist(start, end);
   }
 
-  // Sort data based on column index and order (ascending/descending)
-  void sort<K>(Comparable<K> Function(T d) getField, int columnIndex, bool asc,
-      VoidCallback setState) {
+  void sort<K>(
+    Comparable<K> Function(T d) getField,
+    int columnIndex,
+    bool asc,
+    VoidCallback setState,
+  ) {
     dataList.sort((a, b) {
       final aValue = getField(a);
       final bValue = getField(b);
@@ -67,14 +68,13 @@ class TableController<T> {
     });
     ascending = asc;
     sortColumnIndex = columnIndex;
-    paginationController.currentPage = 0; // Reset to first page after sorting
+    paginationController.currentPage = 0;
     currentPage = 0;
     _checkButtonState();
     _checkSelectAllState();
     setState();
   }
 
-  // Toggle "select all" rows on the current page
   void toggleSelectAll(bool? value, VoidCallback setState) {
     isAllSelected = value ?? false;
     int start = currentPage * rowsPerPage;
@@ -88,15 +88,12 @@ class TableController<T> {
     setState();
   }
 
-  // Toggle selection of individual row
   void toggleSingleRowSelection(int index, VoidCallback setState) {
     int actualIndex = currentPage * rowsPerPage + index;
 
-    // Toggle logic: deselect if already selected
     if (selectedRows[actualIndex]) {
       selectedRows[actualIndex] = false;
     } else {
-      // Deselect all first
       for (int i = 0; i < selectedRows.length; i++) {
         selectedRows[i] = false;
       }
@@ -108,7 +105,6 @@ class TableController<T> {
     setState();
   }
 
-  // Dynamically update rows per page and reset pagination
   void updateRowsPerPage(int newRowsPerPage, VoidCallback setState) {
     rowsPerPage = newRowsPerPage;
     paginationController = PaginationController(
@@ -128,12 +124,10 @@ class TableController<T> {
     setState();
   }
 
-  // Check if any rows are selected to enable action buttons
   void _checkButtonState() {
     isButtonEnabled = selectedRows.any((isSelected) => isSelected);
   }
 
-  // Check if all rows on the current page are selected
   void _checkSelectAllState() {
     int start = currentPage * rowsPerPage;
     int end = (start + rowsPerPage > dataList.length)
@@ -143,7 +137,6 @@ class TableController<T> {
         selectedRows.sublist(start, end).every((selected) => selected);
   }
 
-  // Reset all selections (both rows and page)
   void resetSelections(VoidCallback setState) {
     selectedRows = List.generate(dataList.length, (_) => false);
     isAllSelected = false;
@@ -152,9 +145,30 @@ class TableController<T> {
     currentPage = 0;
     setState();
   }
+
+  void updateData(List<T> newData, VoidCallback setState) {
+    dataList = newData;
+    selectedRows = List.generate(dataList.length, (_) => false);
+    paginationController = PaginationController(
+      rowsPerPage: rowsPerPage,
+      totalRows: dataList.length,
+      currentPage: 0,
+      onPageChange: () {
+        currentPage = paginationController.currentPage;
+        _checkSelectAllState();
+        _checkButtonState();
+        setState();
+      },
+    );
+    currentPage = 0;
+    _generateRowsPerPageOptions();
+    _checkButtonState();
+    _checkSelectAllState();
+    setState();
+  }
 }
 
-// PaginationController class for handling page changes
+/// Controller for pagination navigation
 class PaginationController {
   int rowsPerPage;
   final int totalRows;
@@ -193,15 +207,14 @@ class PaginationController {
   }
 }
 
+/// Show unblock user modal
 void showUnblockModal(BuildContext context) {
   showDialog(
     context: context,
     builder: (dialogContext) => UnblockDataModal(
       onCancel: () => Navigator.pop(dialogContext),
       onUnblock: () {
-        Navigator.pop(dialogContext); // close dialog first
-
-        // Delay to allow context pop before showing snackbar
+        Navigator.pop(dialogContext);
         Future.delayed(Duration.zero, () {
           showSuccessSnackBar(
             context,
@@ -214,7 +227,7 @@ void showUnblockModal(BuildContext context) {
   );
 }
 
-// Build Book Condition chip based on the status value
+/// Build Books Status Chip (New/Old)
 Widget buildBooksStatusChip(String status) {
   final color = status == 'New' ? Colors.green : Colors.orange;
   return Container(
@@ -227,7 +240,7 @@ Widget buildBooksStatusChip(String status) {
   );
 }
 
-// Build reservation status chip based on the status value
+/// Build Reservation Status Chip (Approved/Pending/Rejected)
 Widget buildReservationStatusChip(String status) {
   final color = status == 'Approved'
       ? Colors.green
@@ -247,7 +260,7 @@ Widget buildReservationStatusChip(String status) {
   );
 }
 
-// Build UserManagement Status chip based on the status value
+/// Build User Management Status Chip (Active/Inactive)
 Widget buildUserStatusChip(String status) {
   final color = status == 'Active' ? Colors.green : Colors.red;
   return Container(
@@ -260,14 +273,14 @@ Widget buildUserStatusChip(String status) {
   );
 }
 
-// Build Barrowed Books Status chip based on the status value
+/// Build Borrowed Books Status Chip (Pending/Approved/Returned/Overdue/Damaged)
 Widget buildBarrowedStatusChip(String status) {
   final Map<String, Color> statusColors = {
-    'Pending': Colors.orange, // Awaiting approval
-    'Approved': Colors.blue, // Approved and ready
-    'Returned': Colors.green, // Successfully returned
-    'Overdue': Colors.red, // Late return
-    'Damaged': Colors.brown, // Item not in good condition
+    'Pending': Colors.orange,
+    'Approved': Colors.blue,
+    'Returned': Colors.green,
+    'Overdue': Colors.red,
+    'Damaged': Colors.brown,
   };
 
   final color = statusColors[status] ?? Colors.grey;
@@ -288,7 +301,7 @@ Widget buildBarrowedStatusChip(String status) {
   );
 }
 
-// Build sortable column label with an icon
+/// Build Sortable Column Label with an Icon
 Widget buildSortableColumnLabel(String label) {
   return Row(
     children: [
