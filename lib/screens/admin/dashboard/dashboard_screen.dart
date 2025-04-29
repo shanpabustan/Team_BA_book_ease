@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../components/sidebar.dart';
 import '../components/adminapp_bar.dart';
-import '../calendar/calendar_main.dart';
+import '../settings_folder/settings_index.dart';
 import '../managebook/manage_books_index.dart';
 import '../reservation/reservation_index.dart';
 import '../usermanagement/manage_user_index.dart';
@@ -14,7 +14,9 @@ class DashboardTheme {
   static const Color primaryTextColor = Colors.black87;
   static const Color secondaryTextColor = Colors.grey;
   static const Color cardBackground = Colors.white;
-  static const Color pageBackground = Colors.white;
+  static const Color pageBackground = Color.fromRGBO(248, 244, 243, 1.0);
+
+  static var primaryColor;
 }
 
 class AdminDashboard extends StatefulWidget {
@@ -40,8 +42,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     "Manage Books",
     "Manage Users",
     "Reservation Overview",
-    "Calendar Schedule",
     "Borrowed Books",
+    "Settings",
   ];
 
   final List<Widget> _contentScreens = [
@@ -49,8 +51,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ManageBook(),
     ManageUser(),
     ReservationMain(),
-    CalendarMain(),
     BorrowedBooksMain(),
+    SettingsMain(),
   ];
 
   List<Widget> get _screensWithAppBar =>

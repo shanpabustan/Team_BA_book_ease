@@ -36,6 +36,15 @@ class TableController<T> {
     _generateRowsPerPageOptions(); // Generate dynamic rows per page options
   }
 
+
+void updateDataList(List<T> newDataList) {
+  dataList = newDataList;
+  selectedRows = List.generate(newDataList.length, (index) => false);
+  currentPage = 0; // Reset to first page when filtering
+  notifyListeners();
+}
+
+
   // Dynamically generate rows per page options based on the total data length
   void _generateRowsPerPageOptions() {
     rowsPerPageOptions = [10];
@@ -152,11 +161,13 @@ class TableController<T> {
     setState();
   }
 
-  void updateData(List<Map<String, String>> borrowedBooks) {}
+  void updateData(List<Map<String, String>> borrowedBooks, void Function() param1) {}
 
   void onPageChange() {}
 
   void refresh() {}
+  
+  void notifyListeners() {}
 }
 
 // PaginationController class for handling page changes
@@ -221,16 +232,27 @@ void showUnblockModal(BuildContext context) {
 
 // Build Book Condition chip based on the status value
  Widget buildBooksStatusChip(String status) {
-   final color = status == 'New' ? Colors.green : Colors.orange;
-   return Container(
-     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-     decoration: BoxDecoration(
-       color: color.withOpacity(0.2),
-       borderRadius: BorderRadius.circular(8),
-     ),
-     child: Text(status, style: TextStyle(color: color)),
-   );
- }
+  final color = status == 'New'
+      ? Colors.green
+      : status == 'Used'
+          ? Colors.orange
+          : Colors.grey; // fallback color if status is unexpected
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text(
+      status,
+      style: TextStyle(
+        color: color,
+      ),
+    ),
+  );
+}
+
 
 // Build reservation status chip based on the status value
 Widget buildReservationStatusChip(String status) {

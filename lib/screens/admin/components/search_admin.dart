@@ -1,59 +1,92 @@
 import 'package:flutter/material.dart';
 
-class SearchAdmin extends StatelessWidget {
+class SearchTable<T> extends StatefulWidget {
+  final List<T> originalData;
+  final List<String> searchableFields;
+  
+  final String Function(T) getFieldValue;
+  final void Function(List<T> filteredData) onFiltered;
   final String hintText;
-  final ValueChanged<String>? onChanged;
-  final TextEditingController? controller;
 
-  // Define secondaryTextColor as a static constant for reusability
-  static const Color secondaryTextColor = Colors.grey;
-
-  const SearchAdmin({
+  const SearchTable({
     Key? key,
+    required this.originalData,
+    required this.searchableFields,
+    required this.getFieldValue,
+    required this.onFiltered,
     this.hintText = 'Search...',
-    this.onChanged,
-    this.controller,
   }) : super(key: key);
+
+  @override
+  State<SearchTable<T>> createState() => _SearchTableState<T>();
+}
+
+class _SearchTableState<T> extends State<SearchTable<T>> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text;
+    if (query.isEmpty) {
+      widget.onFiltered(List<T>.from(widget.originalData));
+    } else {
+      final filtered = widget.originalData.where((item) {
+        for (var field in widget.searchableFields) {
+          final value = _getFieldValueField(item, field)?.toLowerCase() ?? '';
+          if (value.contains(query.toLowerCase())) {
+            return true;
+          }
+        }
+        return false;
+      }).toList();
+      widget.onFiltered(filtered);
+    }
+  }
+
+  String? _getFieldValueField(T item, String field) {
+    if (item is Map<String, dynamic>) {
+      return item[field]?.toString();
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 300,
       child: Container(
-        height: 40, // Set the height explicitly
+        height: 40,
         child: TextField(
-          controller: controller,
-          onChanged: onChanged,
-          style:
-              const TextStyle(color: Colors.black), // Text color set to black
+          controller: _searchController,
+          style: const TextStyle(color: Colors.black),
           decoration: InputDecoration(
-            filled: true, // Set filled to true for background color
-            fillColor: Colors.white, // White background color
-            hintText: hintText,
-            hintStyle: const TextStyle(
-              color: Colors.grey, // Hint text color
-              fontSize: 14, // Reduced font size for the hint text
-            ),
-            prefixIcon:
-                const Icon(Icons.search, color: Colors.grey), // Icon color
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8, // Adjusted vertical padding for reduced height
-            ),
+            filled: true,
+            fillColor: Colors.white,
+            hintText: widget.hintText,
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: secondaryTextColor), // Default border color
+              borderSide: const BorderSide(color: Colors.grey),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: secondaryTextColor), // Focused border color
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: secondaryTextColor), // Enabled border color
+              borderSide: const BorderSide(color: Colors.grey),
             ),
           ),
         ),

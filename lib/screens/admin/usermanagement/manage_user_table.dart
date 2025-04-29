@@ -116,9 +116,20 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   onExcelPressed: () {},
                 ),
                 const Spacer(),
-                const SizedBox(
-                  width: 300,
-                  child: SearchAdmin(hintText: 'Search users...'),
+                SizedBox(
+                width: 300,
+                child: SearchTable<Map<String, String>>(
+                  originalData: users,
+                  searchableFields: const ['userId', 'name', 'email', 'course', 'status'], // ✅ fields to search
+                  getFieldValue: (user) => user['name'] ?? '', // You can define it simply; not really used inside your logic but required
+                  hintText: 'Search users...',
+                  onFiltered: (filteredUsers) {
+                    setState(() {
+                      controller.dataList = filteredUsers;
+                      controller.selectedRows = List.generate(filteredUsers.length, (_) => false);
+                    });
+                  },
+                ),
                 ),
               ],
             ),

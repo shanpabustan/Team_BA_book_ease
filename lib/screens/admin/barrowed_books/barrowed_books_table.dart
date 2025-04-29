@@ -36,6 +36,7 @@ class BorrowedBooksScreen extends StatefulWidget {
 
 class _BorrowedBooksScreenState extends State<BorrowedBooksScreen> {
   late TableController<BorrowedBookAdmin> controller;
+  List<BorrowedBookAdmin> originalData = [];
 
 
  @override
@@ -66,6 +67,7 @@ void _loadBorrowedBooks() async {
         print('✅ Mapped borrowed books: $borrowedBooks');
 
         setState(() {
+          originalData = borrowedBooks;
           controller.dataList = borrowedBooks;
           controller.refresh();
         });
@@ -78,6 +80,10 @@ void _loadBorrowedBooks() async {
   } catch (e) {
     print("❌ Error loading borrowed books: $e");
   }
+}
+
+void _onFiltered(List<BorrowedBookAdmin> filteredData) {
+  controller.updateData(filteredData.cast<Map<String, String>>(), () => setState(() {}));
 }
 
 
@@ -102,12 +108,21 @@ void _loadBorrowedBooks() async {
                   },
                 ),
                 const Spacer(),
-                const SizedBox(
-                  width: 300,
-                  child: SearchAdmin(hintText: 'Search borrowed books...'),
-                ),
-              ],
-            ),
+                SearchTable<BorrowedBookAdmin>(
+      originalData: originalData,
+      searchableFields: [
+        'borrowID',
+        'userID',
+        'name',
+        'bookName',
+        'status',
+      ],
+      getFieldValue: (item) => '${item.borrowID} ${item.userID} ${item.name} ${item.bookName} ${item.status}',
+      onFiltered: _onFiltered,
+      hintText: 'Search borrowed books...',
+    ),
+  ],
+),
             const SizedBox(height: 20),
             Expanded(
               child: LayoutBuilder(

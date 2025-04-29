@@ -6,6 +6,8 @@ import 'package:book_ease/base_url.dart';
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_return_controller.dart';
 import 'package:book_ease/widgets/admin_small_button_widget.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
+import 'package:intl/intl.dart';
+
 
 class ReturnBookModal extends StatefulWidget {
   final BorrowedBookAdmin returnData;
@@ -24,7 +26,7 @@ class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController
   @override
   void initState() {
     super.initState();
-    penaltyController.text = widget.returnData.penalty?.toString() ?? '0';
+    penaltyController.text = widget.returnData.penalty.toString();
   }
 
   void showSnackBar(String message) {
@@ -61,7 +63,13 @@ class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController
                   const SizedBox(height: 24),
 
                   buildReadOnlyField('Borrow ID', widget.returnData.borrowID.toString()),
-                  buildReadOnlyField('Due Date', widget.returnData.dueDate ?? 'N/A'),
+                  buildReadOnlyField(
+                    'Due Date',
+                    widget.returnData.dueDate != null
+                        ? DateFormat('MM-dd-yy').format(DateTime.parse(widget.returnData.dueDate!))
+                        : 'N/A',
+                  ),
+
 
                   buildDatePickerField(context),
 

@@ -1,4 +1,3 @@
-// snackbar_helper.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -11,97 +10,111 @@ void showCustomSnackBar(
   required Color iconColor,
   required Color bubbleColor,
 }) {
+  final overlay = Overlay.of(context);
   final screenWidth = MediaQuery.of(context).size.width;
   final isDesktop = screenWidth >= 900;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            height: 90,
-            width: isDesktop ? 480 : null, // wider for desktop
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: const BorderRadius.all(Radius.circular(20)),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 48),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        message,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+  OverlayEntry overlayEntry = OverlayEntry(
+    builder: (context) => Positioned(
+      top: 30,
+      right: isDesktop ? 30 : 16,
+      left: isDesktop ? null : 16,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          height: isDesktop ? 90 : 80, // smaller height on mobile
+          width: isDesktop ? 480 : double.infinity,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(16), // slight adjust for mobile
           ),
-          Positioned(
-            bottom: 0,
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.only(bottomLeft: Radius.circular(20)),
-              child: SvgPicture.asset(
-                "assets/icons/bubbles.svg",
-                height: 48,
-                width: 40,
-                color: bubbleColor,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 40), // icon space
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: isDesktop ? 18 : 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          message,
+                          style: TextStyle(
+                            fontSize: isDesktop ? 16 : 12,
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Positioned(
-            top: -10,
-            left: 0,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SvgPicture.asset(
-                  "assets/icons/fail.svg",
-                  height: 40,
-                  color: iconColor,
-                ),
-                Positioned(
-                  top: 5,
+              // Bubbles background
+              Positioned(
+                bottom: -12,
+                left: -12,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                  ),
                   child: SvgPicture.asset(
-                    svgIconPath,
-                    height: 25,
-                    color: Colors.white,
+                    "assets/icons/bubbles.svg",
+                    height: isDesktop ? 48 : 36,
+                    width: isDesktop ? 40 : 30,
+                    color: bubbleColor,
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ],
-            ),
-          )
-        ],
+              ),
+              // Top Icon (fail + custom icon)
+              Positioned(
+                top: isDesktop ? -30 : -20,
+                left: -5,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/icons/fail.svg",
+                      height: isDesktop ? 40 : 28,
+                      color: iconColor,
+                    ),
+                    Positioned(
+                      top: isDesktop ? 5 : 3,
+                      child: SvgPicture.asset(
+                        svgIconPath,
+                        height: isDesktop ? 25 : 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      margin: isDesktop
-          ? const EdgeInsets.only(left: 16, top: 16)
-          : const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      duration: const Duration(seconds: 3),
     ),
   );
+
+  overlay.insert(overlayEntry);
+
+  // Auto-remove after 3 seconds
+  Future.delayed(const Duration(seconds: 3)).then((_) => overlayEntry.remove());
 }
