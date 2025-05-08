@@ -1,14 +1,18 @@
-import 'package:book_ease/base_url.dart';
-import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:book_ease/screens/user/home/user_dashboard.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'multisignup.dart';
 import 'package:dio/dio.dart';
-import 'package:provider/provider.dart'; // Import provider
-import 'package:book_ease/provider/user_data.dart'; // Import your UserData provider
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import 'package:book_ease/base_url.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/warning_snack_bar.dart';
+import 'package:book_ease/screens/user/home/user_dashboard.dart';
 import 'package:book_ease/screens/admin/dashboard/dashboard_screen.dart';
+import 'package:book_ease/provider/user_data.dart';
+import 'multisignup.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const LogBookEaseApp());
@@ -44,96 +48,104 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _loginUser() async {
-    final Dio dio = Dio();
+ void _loginUser() async {
+  final Dio dio = Dio();
+  final String apiUrl = "${ApiConfig.baseUrl}/stud/login";
 
-    // 🔥 Use the correct API URL (Replace with your actual API URL if needed)
-    final String apiUrl =
-        "${ApiConfig.baseUrl}/stud/login"; // Replace with your API URL
+  try {
+    Response response = await dio.post(
+      apiUrl,
+      data: {
+        "user_id": _idController.text,
+        "password": _passwordController.text,
+      },
+      options: Options(headers: {"Content-Type": "application/json"}),
+    );
 
-    try {
-      // Make POST request with the correct body
-      Response response = await dio.post(
-        apiUrl,
-        data: {
-          "user_id": _idController.text,
-          "password": _passwordController.text,
-        },
-        options: Options(headers: {"Content-Type": "application/json"}),
-      );
+    final data = response.data;
 
-      // Checking if the response is successful
-      if (response.data["retCode"] == "200") {
-        final userData = response.data["data"];
-        String userType = response.data["data"]["user_type"];
+    if (data["retCode"] == "200") {
+      final userData = data["data"];
+      String userType = userData["user_type"];
 
-        debugPrint("Response Data: ${response.data}");
-
-        if (mounted) {
-          showSuccessSnackBar(
-            context,
-            title: 'Login Successful!',
-            message: 'You have logged in successfully.',
-          );
-        }
-
-        // Set user data in the UserData provider
-        final userProvider = Provider.of<UserData>(context, listen: false);
-        userProvider.setUserData(
-          userID: userData["user_id"],
-          userType: userData["user_type"],
-          lastName: userData["last_name"],
-          firstName: userData["first_name"],
-          middleName: userData["middle_name"],
-          suffix: userData["suffix"],
-          email: userData["email"],
-          program: userData["program"],
-          yearLevel: userData["year_level"],
-          contactNumber: userData["contact_number"],
-          avatarPath: userData["avatar_path"] ?? "",
-        );
-
-        // Navigate based on the user type
-        switch (userType) {
-          case "Admin":
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      AdminDashboard()), // Assuming you have this route
-            );
-            break;
-          case "Student":
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const UserDashApp()),
-            );
-            break;
-          default:
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Unknown user type!")),
-            );
-            break;
-        }
-      } else {
-        // Show error message if login fails
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(response.data["message"] ?? 'Unknown error')),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint("API ERROR: ${e.toString()}");
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('userID', userData["user_id"]);
+      await prefs.setString('userType', userType);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to login. Please try again.")),
+        showSuccessSnackBar(
+          context,
+          title: 'Login Successful!',
+          message: 'You have logged in successfully.',
         );
+      }
+
+      final userProvider = Provider.of<UserData>(context, listen: false);
+      userProvider.setUserData(
+        userID: userData["user_id"],
+        userType: userData["user_type"],
+        lastName: userData["last_name"],
+        firstName: userData["first_name"],
+        middleName: userData["middle_name"],
+        suffix: userData["suffix"],
+        email: userData["email"],
+        program: userData["program"],
+        yearLevel: userData["year_level"],
+        contactNumber: userData["contact_number"],
+        avatarPath: userData["avatar_path"] ?? "",
+      );
+
+      // Route based on user type
+      if (userType == "Admin") {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminDashboard()));
+      } else if (userType == "Student") {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const UserDashApp()));
+      } else {
+        showWarningSnackBar(context, title: 'Login Error', message: 'Unknown user type!');
+      }
+    } else {
+      // Handle custom backend errors
+      final String code = data["retCode"];
+      final String message = data["message"] ?? "Login failed.";
+
+      if (mounted) {
+        switch (code) {
+          case "401":
+            //showErrorSnackBar(context, title: "Login Failed", message: message);
+            break;
+          case "403":
+            showWarningSnackBar(context, title: "Account Blocked", message: message);
+            break;
+          case "400":
+            showWarningSnackBar(context, title: "Invalid Request", message: message);
+            break;
+          default:
+            showErrorSnackBar(context, title: "Login Failed", message: message);
+        }
+      }
+    }
+  } on DioException catch (e) {
+    final res = e.response;
+    if (res != null && res.data != null) {
+      final String message = res.data["message"] ?? "Unexpected error.";
+      final String code = res.data["retCode"] ?? "Unknown";
+
+      if (mounted) {
+        if (code == "500") {
+          showErrorSnackBar(context, title: "Server Error", message: message);
+        } else {
+          showWarningSnackBar(context, title: "Login Failed", message: message);
+        }
+      }
+    } else {
+      if (mounted) {
+        showErrorSnackBar(context, title: "Connection Error", message: "Could not connect to server.");
       }
     }
   }
+}
+
 
   @override
   void dispose() {

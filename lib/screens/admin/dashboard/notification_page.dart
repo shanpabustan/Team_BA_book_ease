@@ -1,15 +1,53 @@
 // lib/widgets/notification_popup.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:book_ease/provider/notification_provider.dart';
+import 'package:book_ease/provider/notification_service.dart'; // Adjust path
+import 'package:book_ease/data/notification_data.dart';
+import 'package:intl/intl.dart';
 
-class NotificationPopup extends StatelessWidget {
-  const NotificationPopup({super.key});
+class NotificationPopup extends StatefulWidget {
+  final String userId;
+
+  const NotificationPopup({super.key, required this.userId});
+
+  @override
+  State<NotificationPopup> createState() => _NotificationPopupState();
+}
+
+class _NotificationPopupState extends State<NotificationPopup> {
+  final NotificationService _notificationService = NotificationService();
+  List<AppNotification> _notifications = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    try {
+      final notifications = await _notificationService.fetchNotifications(widget.userId);
+      setState(() {
+        _notifications = notifications;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print("Failed to load notifications: $e");
+    }
+  }
+
+  String _formatTime(String timestamp) {
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      return DateFormat('MMM d, h:mm a').format(dateTime);
+    } catch (_) {
+      return timestamp;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final notifProvider = context.watch<NotificationProvider>();
-
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(12),
@@ -30,7 +68,17 @@ class NotificationPopup extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 TextButton(
-                  onPressed: () => notifProvider.markAllAsRead(),
+                  onPressed: () {
+                    setState(() {
+                      _notifications = _notifications.map((n) => AppNotification(
+                        notificationId: n.notificationId,
+                        userId: n.userId,
+                        message: n.message,
+                        createdAt: n.createdAt,
+                        isRead: true,
+                      )).toList();
+                    });
+                  },
                   child: const Text(
                     "Mark All as Read",
                     style: TextStyle(fontSize: 12),
@@ -41,31 +89,33 @@ class NotificationPopup extends StatelessWidget {
             const Divider(),
             // List
             Expanded(
-              child: notifProvider.notifications.isEmpty
-                  ? const Center(child: Text("No notifications"))
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: notifProvider.notifications.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final notif = notifProvider.notifications[index];
-                        return ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.notifications,
-                              color: Colors.blue),
-                          title: Text(notif.title,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w500)),
-                          subtitle: Text(notif.message),
-                          trailing: Text(
-                            notif.time,
-                            style: const TextStyle(
-                                fontSize: 10, color: Colors.grey),
-                          ),
-                        );
-                      },
-                    ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _notifications.isEmpty
+                      ? const Center(child: Text("No notifications"))
+                      : ListView.separated(
+                          itemCount: _notifications.length,
+                          separatorBuilder: (_, __) => const Divider(),
+                          itemBuilder: (context, index) {
+                            final notif = _notifications[index];
+                            return ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(
+                                Icons.notifications,
+                                color: notif.isRead ? Colors.grey : Colors.blue,
+                              ),
+                              title: Text(
+                                notif.message,
+                                style: const TextStyle(fontWeight: FontWeight.w500),
+                              ),
+                              subtitle: Text(
+                                _formatTime(notif.createdAt),
+                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),

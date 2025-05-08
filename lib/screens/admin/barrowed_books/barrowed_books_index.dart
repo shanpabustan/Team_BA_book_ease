@@ -27,7 +27,7 @@ class _BorrowedBooksMainState extends State<BorrowedBooksMain> {
             children: [
               // Borrowed Books Table Section
               Expanded(
-                child: BorrowedBooksTable(), // BorrowedBooksTable widget
+                child: BorrowedBooksApp(), // BorrowedBooksTable widget
               ),
               const SizedBox(height: 20),
             ],

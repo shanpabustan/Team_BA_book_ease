@@ -8,8 +8,12 @@ import 'package:book_ease/screens/user/account/personal_view.dart';
 import 'package:book_ease/data/personal_data.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/user_data.dart';
+import 'package:book_ease/provider/book_provider.dart';
 import 'package:book_ease/main.dart';
+import 'package:book_ease/modals/logout_modal.dart';
 import 'package:book_ease/base_url.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -266,12 +270,55 @@ class _AccountScreenState extends State<AccountScreen> {
             'Logout',
             isLogout: true,
             onTap: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LogBookEaseApp(),
-                ),
-                (route) => false,
+              // Get the providers before showing the dialog
+              final userData = Provider.of<UserData>(context, listen: false);
+              final bookProvider = Provider.of<BookProvider>(context, listen: false);
+              
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return LogoutModal(
+                    onCancel: () {
+                      Navigator.of(context).pop(); // Close the modal
+                    },
+                    onLogout: () async {
+                      Navigator.of(context).pop(); // Close the modal first
+
+                      try {
+                        final dio = Dio();
+                        final response = await dio.post(
+                          '${ApiConfig.baseUrl}/stud/logout',
+                          options: Options(
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                          ),
+                        );
+
+                        if (response.statusCode == 200 && response.data['retCode'] == '200') {
+                          // Use the providers we got before showing the dialog
+                          userData.logout(); // clears user info + SharedPrefs
+                          bookProvider.clearBooks();
+
+                          // Redirect to login screen
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LogBookEaseApp()),
+                            (route) => false,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Logout failed. Please try again.')),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Logout error: $e')),
+                        );
+                      }
+                    },
+                  );
+                },
               );
             },
           ),

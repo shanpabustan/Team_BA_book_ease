@@ -1,5 +1,7 @@
 // borrowed_book.dart
 
+import 'package:flutter/src/material/data_table.dart';
+
 class BorrowedBookAdmin {
   final int borrowID;
   final int reservationID;
@@ -49,4 +51,38 @@ class BorrowedBookAdmin {
       penalty: json['penalty_amount'] ?? 0.0,
     );
   }
+
+String getField(String field) {
+    switch (field) {
+      case 'borrowID':
+        return borrowID.toString();
+      case 'reservationID':
+        return reservationID.toString();
+      case 'userID':
+        return userID;
+      case 'name':
+        return name;
+      case 'bookID':
+        return bookID.toString();
+      case 'bookName':
+        return bookName;
+      case 'status':
+        return status;
+      case 'borrowDate':
+        return borrowDate;
+      case 'dueDate':
+        return dueDate;
+      case 'returnDate':
+        return returnDate;
+      case 'conditionBefore':
+        return conditionBefore;
+      case 'conditionAfter':
+        return conditionAfter;
+      case 'penalty':
+        return penalty.toString();
+      default:
+        return '';
+    }
+  }
+  
 }

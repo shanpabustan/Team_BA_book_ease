@@ -49,8 +49,20 @@ class _AddBookFormState extends State<AddBookForm> {
     'Computer Science',
     'Engineering',
     'Mathematics',
+    'Fiction',
+    'Non-Fiction',
+    'Textbooks',
+    'Reference Materials',
+    'Children’s Books',
+    'Young Adult (YA)',
+    'Science & Technology',
+    'History & Social Studies',
+    'Biographies',
+    'Comics & Graphic Novels',
     'Others',
   ];
+
+
   List<String> _categories = [];
 
   final List<String> conditions = ['New', 'Used'];

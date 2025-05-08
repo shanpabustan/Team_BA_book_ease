@@ -1,9 +1,7 @@
 import 'package:book_ease/base_url.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'book_data.dart'; // Book and BorrowedBook models
-
-
+import 'book_data.dart';
 
 class BookProvider with ChangeNotifier {
   List<Book> _books = [];
@@ -43,14 +41,25 @@ class BookProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'];
-        _borrowedBooks = data.map((json) => BorrowedBook.fromJson(json)).toList();
+        _borrowedBooks = [];
+
+        if (data.isNotEmpty) {
+          _borrowedBooks =
+              data.map((json) => BorrowedBook.fromJson(json)).toList();
+        }
+
         notifyListeners();
       }
     } catch (e) {
       print('Error fetching borrowed books: $e');
+      _borrowedBooks = [];
+      notifyListeners();
     }
   }
 
-
-
+  void clearBooks() {
+    _books = [];
+    _borrowedBooks = [];
+    notifyListeners();
+  }
 }

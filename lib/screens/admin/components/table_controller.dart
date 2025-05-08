@@ -36,14 +36,12 @@ class TableController<T> {
     _generateRowsPerPageOptions(); // Generate dynamic rows per page options
   }
 
-
-void updateDataList(List<T> newDataList) {
-  dataList = newDataList;
-  selectedRows = List.generate(newDataList.length, (index) => false);
-  currentPage = 0; // Reset to first page when filtering
-  notifyListeners();
-}
-
+  void updateDataList(List<T> newDataList) {
+    dataList = newDataList;
+    selectedRows = List.generate(newDataList.length, (index) => false);
+    currentPage = 0; // Reset to first page when filtering
+    notifyListeners();
+  }
 
   // Dynamically generate rows per page options based on the total data length
   void _generateRowsPerPageOptions() {
@@ -56,11 +54,11 @@ void updateDataList(List<T> newDataList) {
   }
 
   // Get current page data based on pagination
- List<T> get currentPageData {
-  int start = currentPage * rowsPerPage;
-  int end = (start + rowsPerPage).clamp(0, dataList.length);
-  return dataList.sublist(start, end);
-}
+  List<T> get currentPageData {
+    int start = currentPage * rowsPerPage;
+    int end = (start + rowsPerPage).clamp(0, dataList.length);
+    return dataList.sublist(start, end);
+  }
 
   // Sort data based on column index and order (ascending/descending)
   void sort<K>(Comparable<K> Function(T d) getField, int columnIndex, bool asc,
@@ -97,23 +95,10 @@ void updateDataList(List<T> newDataList) {
 
   // Toggle selection of individual row
 
-  void toggleSingleRowSelection(int index, VoidCallback setState) {
-    int actualIndex = currentPage * rowsPerPage + index;
-
-    // Toggle logic: deselect if already selected
-    if (selectedRows[actualIndex]) {
-      selectedRows[actualIndex] = false;
-    } else {
-      // Deselect all first
-      for (int i = 0; i < selectedRows.length; i++) {
-        selectedRows[i] = false;
-      }
-      selectedRows[actualIndex] = true;
-    }
-
-    isAllSelected = false;
-    _checkButtonState();
-    setState();
+  void toggleSingleRowSelection(int globalIndex, VoidCallback onUpdate) {
+    selectedRows[globalIndex] = !selectedRows[globalIndex];
+    _checkButtonState(); // Add this line
+    onUpdate();
   }
 
   // Dynamically update rows per page and reset pagination
@@ -161,12 +146,13 @@ void updateDataList(List<T> newDataList) {
     setState();
   }
 
-  void updateData(List<Map<String, String>> borrowedBooks, void Function() param1) {}
+  void updateData(
+      List<Map<String, String>> borrowedBooks, void Function() param1) {}
 
   void onPageChange() {}
 
   void refresh() {}
-  
+
   void notifyListeners() {}
 }
 
@@ -231,7 +217,7 @@ void showUnblockModal(BuildContext context) {
 }
 
 // Build Book Condition chip based on the status value
- Widget buildBooksStatusChip(String status) {
+Widget buildBooksStatusChip(String status) {
   final color = status == 'New'
       ? Colors.green
       : status == 'Used'
@@ -253,7 +239,6 @@ void showUnblockModal(BuildContext context) {
   );
 }
 
-
 // Build reservation status chip based on the status value
 Widget buildReservationStatusChip(String status) {
   final color = status == 'Approved'
@@ -265,7 +250,7 @@ Widget buildReservationStatusChip(String status) {
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     decoration: BoxDecoration(
       color: color.withOpacity(0.2),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(8),
     ),
     child: Text(
       status,
@@ -287,33 +272,33 @@ Widget buildUserStatusChip(String status) {
 }
 
 // Build Barrowed Books Status chip based on the status value
- Widget buildBarrowedStatusChip(String status) {
-   final Map<String, Color> statusColors = {
-     'Pending': Colors.orange, // Awaiting approval
-     'Approved': Colors.blue, // Approved and ready
-     'Returned': Colors.green, // Successfully returned
-     'Overdue': Colors.red, // Late return
-     'Damaged': Colors.brown, // Item not in good condition
-   };
- 
-   final color = statusColors[status] ?? Colors.grey;
- 
-   return Container(
-     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-     decoration: BoxDecoration(
-       color: color.withOpacity(0.2),
-       borderRadius: BorderRadius.circular(8),
-     ),
-     child: Text(
-       status,
-       style: TextStyle(
-         color: color,
-         fontWeight: FontWeight.w500,
-       ),
-     ),
-   );
- }
- 
+Widget buildBarrowedStatusChip(String status) {
+  final Map<String, Color> statusColors = {
+    'Pending': Colors.orange, // Awaiting approval
+    'Approved': Colors.blue, // Approved and ready
+    'Returned': Colors.green, // Successfully returned
+    'Overdue': Colors.red, // Late return
+    'Damaged': Colors.brown, // Item not in good condition
+  };
+
+  final color = statusColors[status] ?? Colors.grey;
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Text(
+      status,
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  );
+}
+
 // Build sortable column label with an icon
 Widget buildSortableColumnLabel(String label) {
   return Row(

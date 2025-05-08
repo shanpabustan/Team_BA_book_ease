@@ -38,7 +38,11 @@ class ValidationModal extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close, color: Colors.black54),
+                    child: const Icon(
+                    Icons.close,
+                    color: Colors.black,
+                    size: 25,  // Increased size for a bolder appearance
+                  ),
                   ),
                 ],
               ),
@@ -78,25 +82,6 @@ class ValidationModal extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF1C0E4B)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: Color(0xFF1C0E4B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
                   const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: () {
@@ -119,13 +104,13 @@ class ValidationModal extends StatelessWidget {
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ],
           ),
         ),
-      ),
+      )
     );
   }
 }

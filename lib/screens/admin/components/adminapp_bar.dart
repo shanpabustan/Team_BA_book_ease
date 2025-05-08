@@ -1,8 +1,9 @@
-// lib/widgets/appbar_widget.dart
-import 'package:book_ease/provider/notification_provider.dart';
-import 'package:book_ease/screens/admin/dashboard/notification_page.dart';
+import 'package:book_ease/base_url.dart';
 import 'package:flutter/material.dart';
+import 'package:book_ease/screens/admin/dashboard/notification_page.dart';
+import 'package:book_ease/provider/user_data.dart';
 import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
 
 class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -24,11 +25,45 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
 class _AppBarWidgetState extends State<AppBarWidget> {
   final GlobalKey _notifIconKey = GlobalKey();
   OverlayEntry? _popupEntry;
+  int unreadCount = 0;
 
-  void _toggleNotificationPopup(BuildContext context) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<UserData>().userID;
+      if (userId.isNotEmpty) {
+        fetchUnreadNotifications(userId);
+      }
+    });
+  }
+
+  Future<void> fetchUnreadNotifications(String userId) async {
+    try {
+      final response = await Dio().get(
+        '${ApiConfig.baseUrl}/notifications/unread',
+        queryParameters: {'user_id': userId},
+      );
+
+      if (response.statusCode == 200) {
+        final count = response.data['unreadCount'] ?? 0;
+        setState(() {
+          unreadCount = count;
+        });
+        print("Unread count updated: $unreadCount");
+      } else {
+        print('Error loading unread count: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Failed to load unread notifications: $e');
+    }
+  }
+
+  void _toggleNotificationPopup(BuildContext context, String userId) {
     if (_popupEntry != null) {
       _popupEntry!.remove();
       _popupEntry = null;
+      print('Popup removed');
       return;
     }
 
@@ -40,16 +75,17 @@ class _AppBarWidgetState extends State<AppBarWidget> {
       builder: (context) => Positioned(
         top: position.dy + 40,
         left: position.dx - 280,
-        child: const NotificationPopup(),
+        child: NotificationPopup(userId: userId),
       ),
     );
 
     Overlay.of(context).insert(_popupEntry!);
+    print('Popup inserted');
   }
 
   @override
   Widget build(BuildContext context) {
-    final unreadCount = context.watch<NotificationProvider>().unreadCount;
+    final userId = context.watch<UserData>().userID;
 
     return Card(
       elevation: 2,
@@ -81,26 +117,35 @@ class _AppBarWidgetState extends State<AppBarWidget> {
             ),
             Row(
               children: [
-                // NOTIFICATION ICON WITH TOGGLE
                 Stack(
                   children: [
                     IconButton(
                       key: _notifIconKey,
-                      icon: const Icon(Icons.notifications,
-                          color: Colors.black87),
-                      onPressed: () => _toggleNotificationPopup(context),
+                      icon: const Icon(Icons.notifications, color: Colors.black87),
+                      onPressed: () => _toggleNotificationPopup(context, userId),
                     ),
                     if (unreadCount > 0)
                       Positioned(
-                        right: 8,
-                        top: 8,
-                        child: CircleAvatar(
-                          backgroundColor: Colors.red,
-                          radius: 6,
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
                           child: Text(
-                            unreadCount.toString(),
+                            unreadCount > 9 ? '9+' : unreadCount.toString(),
                             style: const TextStyle(
-                                fontSize: 10, color: Colors.white),
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),

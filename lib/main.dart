@@ -1,22 +1,28 @@
 import 'package:book_ease/screens/admin/managebook/book_management_table.dart';
+import 'package:book_ease/screens/user/home/user_dashboard.dart';
 import 'package:book_ease/screens/user/library/library_main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:book_ease/screens/auth/login.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart'; // Import provider
-import 'package:book_ease/provider/user_data.dart'; // Import your UserData provider
+import 'package:provider/provider.dart';
+import 'package:book_ease/provider/user_data.dart';
 import 'package:book_ease/screens/admin/dashboard/dashboard_screen.dart';
 import 'package:book_ease/provider/book_provider.dart';
-import 'package:book_ease/provider/notification_provider.dart';
+//import 'package:book_ease/provider/notification_provider.dart';
 
 const Color secondaryColor = Color.fromRGBO(49, 120, 115, 1);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await requestPermissions();
-  runApp(const MyApp());
+
+  // ✅ Initialize and load user data from SharedPreferences
+  final userData = UserData();
+  await userData.loadFromPrefs();
+
+  runApp(MyApp(userData: userData));
 }
 
 Future<void> requestPermissions() async {
@@ -29,7 +35,9 @@ Future<void> requestPermissions() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final UserData userData;
+
+  const MyApp({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +45,9 @@ class MyApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserData()),
+        ChangeNotifierProvider<UserData>.value(value: userData),
         ChangeNotifierProvider(create: (_) => BookProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -59,7 +67,13 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: const LogBookEaseApp(),
+        home: userData.isLoggedIn
+            ? (userData.userType == "Admin"
+                ? AdminDashboard()
+                : (userData.userType == "Student"
+                    ? const UserDashApp()
+                    : const LoginScreen()))
+            : const LoginScreen(),
       ),
     );
   }

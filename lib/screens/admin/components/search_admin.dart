@@ -1,10 +1,10 @@
+// search_admin.dart
 import 'package:flutter/material.dart';
 
 class SearchTable<T> extends StatefulWidget {
   final List<T> originalData;
   final List<String> searchableFields;
-  
-  final String Function(T) getFieldValue;
+  final String Function(T)? getFieldValue;
   final void Function(List<T> filteredData) onFiltered;
   final String hintText;
 
@@ -12,7 +12,7 @@ class SearchTable<T> extends StatefulWidget {
     Key? key,
     required this.originalData,
     required this.searchableFields,
-    required this.getFieldValue,
+    this.getFieldValue,
     required this.onFiltered,
     this.hintText = 'Search...',
   }) : super(key: key);
@@ -22,13 +22,12 @@ class SearchTable<T> extends StatefulWidget {
 }
 
 class _SearchTableState<T> extends State<SearchTable<T>> {
-  late TextEditingController _searchController;
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
-    _searchController.addListener(_onSearchChanged);
+    _searchController = TextEditingController()..addListener(_onSearchChanged);
   }
 
   @override
@@ -39,28 +38,24 @@ class _SearchTableState<T> extends State<SearchTable<T>> {
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text;
+    final query = _searchController.text.toLowerCase();
     if (query.isEmpty) {
       widget.onFiltered(List<T>.from(widget.originalData));
     } else {
       final filtered = widget.originalData.where((item) {
-        for (var field in widget.searchableFields) {
-          final value = _getFieldValueField(item, field)?.toLowerCase() ?? '';
-          if (value.contains(query.toLowerCase())) {
-            return true;
-          }
+        if (item is Map) {
+          return widget.searchableFields.any((field) {
+            final value = item[field]?.toString().toLowerCase() ?? '';
+            return value.contains(query);
+          });
+        } else if (widget.getFieldValue != null) {
+          final value = widget.getFieldValue!(item).toLowerCase();
+          return value.contains(query);
         }
         return false;
       }).toList();
       widget.onFiltered(filtered);
     }
-  }
-
-  String? _getFieldValueField(T item, String field) {
-    if (item is Map<String, dynamic>) {
-      return item[field]?.toString();
-    }
-    return null;
   }
 
   @override

@@ -1,22 +1,24 @@
-import 'package:book_ease/screens/user/library/book_grid.dart';
+import 'package:book_ease/screens/user/user_components/banner_widget.dart';
+import 'package:book_ease/screens/user/user_components/home_components.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:book_ease/widgets/topusernav_widget.dart';
 import 'package:book_ease/widgets/notification_widget.dart';
 import 'package:book_ease/provider/book_provider.dart';
 import 'package:book_ease/provider/user_data.dart';
 import 'package:book_ease/provider/notification_service.dart';
+import 'package:book_ease/data/userdashbook_data.dart';
 import 'package:book_ease/data/notification_data.dart';
-import 'package:book_ease/screens/user/user_components/home_components.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<LibraryScreen> createState() => _LibraryScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   bool _showNotifications = false;
   bool _isFetchingNotifs = true;
   List<AppNotification> _notifications = [];
@@ -49,22 +51,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchNotifications();
-      Provider.of<BookProvider>(context, listen: false).fetchBooks();
+    _fetchNotifications();
+    Future.microtask(() {
+      final userId = Provider.of<UserData>(context, listen: false).userID;
+      final bookProvider = Provider.of<BookProvider>(context, listen: false);
+      if (userId != null) {
+        bookProvider.fetchBorrowedBooks(userId);
+      }
     });
   }
 
   @override
   void dispose() {
-    _selectedCategory.dispose();
+    _selectedCategory.dispose(); // Dispose the ValueNotifier here
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final userId = Provider.of<UserData>(context).userID;
-
     return Stack(
       children: [
         Scaffold(
@@ -72,29 +76,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
             onNotificationPressed: _toggleNotificationOverlay,
             unreadCount: _notifications.where((n) => !n.isRead).length,
           ),
-          body: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      UIComponents.sectionTitle('Explore Library Books'),
-                      const SizedBox(height: 10),
-                      UIComponents.selectCategory(_selectedCategory),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: BookGrid(userId: userId), // must be non-scrollable
-                ),
-              ),
-            ],
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                UIComponents.sectionTitle('Explore New Books'),
+                const BannerWidget(),
+                const SizedBox(height: 25),
+                UIComponents.selectCategory(_selectedCategory),
+                const SizedBox(height: 10),
+                UIComponents.bookSection(context, 'Recommendations', getBooks),
+                UIComponents.bookSection(context, 'Trending Books', getBooks),
+                UIComponents.bookSection(context, 'Borrowed Books', getBooks),
+              ],
+            ),
           ),
         ),
         if (_showNotifications)

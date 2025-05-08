@@ -43,7 +43,9 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/logo-removebg-preview.png
-    - assets/images/banner.jpg
+    - assets/images/banner1.jpg
+    - assets/images/banner2.png
+    - assets/images/banner3.png
     - assets/images/percy-book.jpg
     - assets/images/admin_logo.png
     - assets/images/harry-book.jpg

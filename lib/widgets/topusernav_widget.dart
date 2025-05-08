@@ -5,10 +5,12 @@ import 'package:book_ease/main.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onNotificationPressed;
+  final int unreadCount;
 
   const AppBarWidget({
     super.key,
     required this.onNotificationPressed,
+    required this.unreadCount,
   });
 
   @override
@@ -17,10 +19,6 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: secondaryColor,
       title: Row(
         children: [
-          // Image.asset(
-          //   'assets/images/admin_logo.png', // ✅ Add your logo image
-          //   height: 100,
-          // ),
           Text(
             "BookEase",
             style: GoogleFonts.poppins(
@@ -32,18 +30,82 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SearchScreen()),
-            );
-          },
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white24,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.search, color: Colors.white, size: 20),
+              onPressed: () {
+                Navigator.of(context).push(PageRouteBuilder(
+                  transitionDuration: const Duration(milliseconds: 150),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const SearchScreen(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    );
+                  },
+                ));
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications, color: Colors.white),
-          onPressed: onNotificationPressed,
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Stack(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white24,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications,
+                      color: Colors.white, size: 20),
+                  onPressed: onNotificationPressed,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 15,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount > 9 ? '9+' : '$unreadCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

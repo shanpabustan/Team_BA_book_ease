@@ -1,24 +1,39 @@
+import 'dart:convert';
+import 'package:book_ease/provider/book_data.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Define a BorrowedBook model
 class BorrowedBook {
   final int reservationID;
   final String userID;
-  final int bookID;
-  final String title;
-  final String picture;
+  final Book book;
   final DateTime borrowDate;
   final DateTime dueDate;
 
   BorrowedBook({
     required this.reservationID,
     required this.userID,
-    required this.bookID,
-    required this.title,
-    required this.picture,
+    required this.book,
     required this.borrowDate,
     required this.dueDate,
   });
+
+  Map<String, dynamic> toJson() => {
+        'reservationID': reservationID,
+        'userID': userID,
+        'book': book.toJson(),
+        'borrowDate': borrowDate.toIso8601String(),
+        'dueDate': dueDate.toIso8601String(),
+      };
+
+  factory BorrowedBook.fromJson(Map<String, dynamic> json) => BorrowedBook(
+        reservationID: json['reservationID'],
+        userID: json['userID'],
+        book: Book.fromJson(json['book']),
+        borrowDate: DateTime.parse(json['borrowDate']),
+        dueDate: DateTime.parse(json['dueDate']),
+      );
 }
 
 class UserData with ChangeNotifier {
@@ -32,8 +47,10 @@ class UserData with ChangeNotifier {
   String _program = '';
   String _yearLevel = '';
   String _contactNumber = '';
-  String _avatarPath = ''; // Added avatarPath field
-  List<BorrowedBook> _borrowedBooks = []; // New field for borrowed books
+  String _avatarPath = '';
+ 
+
+  bool _isLoggedIn = false;
 
   // Getters
   String get userID => _userID;
@@ -46,11 +63,11 @@ class UserData with ChangeNotifier {
   String get program => _program;
   String get yearLevel => _yearLevel;
   String get contactNumber => _contactNumber;
-  String get avatarPath => _avatarPath; // Getter for avatarPath
-  List<BorrowedBook> get borrowedBooks => _borrowedBooks; // Getter for borrowed books
+  String get avatarPath => _avatarPath;
+  bool get isLoggedIn => _isLoggedIn;
 
-  // Setters to update the data
-  void setUserData({
+  // Setters
+  Future<void> setUserData({
     required String userID,
     required String userType,
     required String lastName,
@@ -61,8 +78,8 @@ class UserData with ChangeNotifier {
     required String program,
     required String yearLevel,
     required String contactNumber,
-    required String avatarPath, // Added avatarPath
-  }) {
+    required String avatarPath,
+  }) async {
     _userID = userID;
     _userType = userType;
     _lastName = lastName;
@@ -73,18 +90,74 @@ class UserData with ChangeNotifier {
     _program = program;
     _yearLevel = yearLevel;
     _contactNumber = contactNumber;
-    _avatarPath = avatarPath; // Save avatarPath
+    _avatarPath = avatarPath;
+    _isLoggedIn = true;
 
-    notifyListeners(); // Notify listeners about data change
-  }
-
-  // Function to update borrowed books
-  void setBorrowedBooks(List<BorrowedBook> books) {
-    _borrowedBooks = books;
+    await saveToPrefs();
     notifyListeners();
   }
 
-  // Function to update avatarPath
+  Future<void> saveToPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', _isLoggedIn);
+    await prefs.setString('userID', _userID);
+    await prefs.setString('userType', _userType);
+    await prefs.setString('lastName', _lastName);
+    await prefs.setString('firstName', _firstName);
+    await prefs.setString('middleName', _middleName);
+    await prefs.setString('suffix', _suffix);
+    await prefs.setString('email', _email);
+    await prefs.setString('program', _program);
+    await prefs.setString('yearLevel', _yearLevel);
+    await prefs.setString('contactNumber', _contactNumber);
+    await prefs.setString('avatarPath', _avatarPath);
+    
+  }
+
+  Future<void> loadFromPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    if (!_isLoggedIn) return;
+
+    _userID = prefs.getString('userID') ?? '';
+    _userType = prefs.getString('userType') ?? '';
+    _lastName = prefs.getString('lastName') ?? '';
+    _firstName = prefs.getString('firstName') ?? '';
+    _middleName = prefs.getString('middleName') ?? '';
+    _suffix = prefs.getString('suffix') ?? '';
+    _email = prefs.getString('email') ?? '';
+    _program = prefs.getString('program') ?? '';
+    _yearLevel = prefs.getString('yearLevel') ?? '';
+    _contactNumber = prefs.getString('contactNumber') ?? '';
+    _avatarPath = prefs.getString('avatarPath') ?? '';
+
+    
+
+    notifyListeners();
+  }
+
+  void logout() async {
+    _userID = '';
+    _userType = '';
+    _lastName = '';
+    _firstName = '';
+    _middleName = '';
+    _suffix = '';
+    _email = '';
+    _program = '';
+    _yearLevel = '';
+    _contactNumber = '';
+    _avatarPath = '';
+    _isLoggedIn = false;
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    notifyListeners();
+  }
+
+
+
   void setAvatarPath(String path) {
     _avatarPath = path;
     notifyListeners();
@@ -96,7 +169,7 @@ class UserData with ChangeNotifier {
     required String middleName,
     required String suffix,
     required String contactNumber,
-    String? program, // Allow null, but handle it properly
+    String? program,
     String? yearLevel,
   }) {
     _firstName = firstName;
@@ -104,7 +177,7 @@ class UserData with ChangeNotifier {
     _middleName = middleName;
     _suffix = suffix;
     _contactNumber = contactNumber;
-    _program = program ?? _program; // Retain old value if null
+    _program = program ?? _program;
     _yearLevel = yearLevel ?? _yearLevel;
 
     notifyListeners();

@@ -100,8 +100,8 @@ class UnblockDataModal extends StatelessWidget {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: () {
-                      // Perform unblock logic here
-                      onUnblock(); // This triggers the onUnblock callback from showUnblockModal
+                      onUnblock(); // Call the unblock function passed from parent
+                      Navigator.pop(context); // Close the modal after unblock action
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:

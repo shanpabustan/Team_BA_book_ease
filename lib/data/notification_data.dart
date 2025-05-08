@@ -1,7 +1,7 @@
 class AppNotification {
   final int notificationId;
   final String userId;
-  final String message;  // This is all you need for display
+  final String message;
   final String createdAt;
   final bool isRead;
 
@@ -14,12 +14,14 @@ class AppNotification {
   });
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
-    return AppNotification(
-      notificationId: json['NotificationID'],
-      userId: json['UserID'],
-      message: json['Message'],  // Directly using the message
-      createdAt: json['CreatedAt'],
-      isRead: json['IsRead'],
-    );
-  }
+  return AppNotification(
+    notificationId: json['NotificationID'] ?? 0,
+    userId: json['UserID'] ?? '',
+    message: json['Message'] ?? 'No message',
+    createdAt: json['CreatedAt'] ?? DateTime.now().toIso8601String(),
+    isRead: json['IsRead'] ?? false,
+  );
 }
+
+}
+

@@ -1,9 +1,12 @@
+import 'package:book_ease/base_url.dart';
 import 'package:book_ease/modals/end_date_modal.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:book_ease/screens/admin/components/settings_components.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 
 class EndSemesterCard extends StatefulWidget {
   const EndSemesterCard({super.key});
@@ -15,7 +18,90 @@ class EndSemesterCard extends StatefulWidget {
 class _EndSemesterCardState extends State<EndSemesterCard> {
   DateTime? selectedDate;
 
-  // Function to show Date Picker modal
+  @override
+  void initState() {
+    super.initState();
+    _fetchSemesterEndDate();
+  }
+
+  Future<void> _fetchSemesterEndDate() async {
+  try {
+    final response = await Dio().get(
+      '${ApiConfig.baseUrl}/admin/semester/end-date',
+      options: Options(headers: {
+        'Content-Type': 'application/json',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final String? dateStr = response.data['data']?['value'];
+      if (dateStr != null && dateStr.isNotEmpty) {
+        setState(() {
+          selectedDate = DateTime.parse(dateStr);
+        });
+      }
+    } else {
+      if (context.mounted) {
+        showErrorSnackBar(
+          context,
+          title: "Error",
+          message: "Failed to fetch semester end date.",
+        );
+      }
+    }
+  } catch (e) {
+    if (context.mounted) {
+      showErrorSnackBar(
+        context,
+        title: "Error",
+        message: "Unable to fetch semester end date.",
+      );
+    }
+    print("Fetch error: $e");
+  }
+}
+
+
+  Future<void> _updateSemesterEndDate() async {
+    if (selectedDate == null) return;
+
+    final String formatted = DateFormat('yyyy-MM-dd').format(selectedDate!);
+
+    try {
+      final response = await Dio().put(
+        '${ApiConfig.baseUrl}/admin/semester/end-date',
+        data: {"value": formatted},
+        options: Options(headers: {
+          'Content-Type': 'application/json',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final message = response.data['message'];
+        if (context.mounted) {
+          showSuccessSnackBar(context, title: "Success!", message: message);
+        }
+      } else {
+        if (context.mounted) {
+          showErrorSnackBar(
+            context,
+            title: "Error",
+            message: "Unexpected status: ${response.statusCode}",
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(
+          context,
+          title: "Error",
+          message: "Failed to update semester end date.",
+        );
+      }
+      print("API error: $e");
+    }
+  }
+
   Future<void> _selectEndSemesterDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -42,12 +128,14 @@ class _EndSemesterCardState extends State<EndSemesterCard> {
     );
 
     if (picked != null && picked != selectedDate) {
-      // Await result from confirmation dialog
       final result = await showEndDateConfirmationDialog(context, picked);
       if (result == true) {
         setState(() {
           selectedDate = picked;
         });
+
+        await _updateSemesterEndDate();
+
         if (context.mounted) {
           showSuccessSnackBar(
             context,
@@ -71,7 +159,7 @@ class _EndSemesterCardState extends State<EndSemesterCard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 Left side content
+            // Left section
             Expanded(
               flex: 3,
               child: Column(
@@ -110,7 +198,7 @@ class _EndSemesterCardState extends State<EndSemesterCard> {
               ),
             ),
             const SizedBox(width: 16),
-            // 🔹 Right side date display
+            // Right section
             Expanded(
               flex: 2,
               child: Column(
@@ -120,8 +208,8 @@ class _EndSemesterCardState extends State<EndSemesterCard> {
                     "End Date",
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black54,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -130,10 +218,10 @@ class _EndSemesterCardState extends State<EndSemesterCard> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6), // light grey background
+                      color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFFD1D5DB), // border color
+                        color: const Color(0xFFD1D5DB),
                       ),
                     ),
                     child: Text(

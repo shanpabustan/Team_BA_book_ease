@@ -1,15 +1,16 @@
-import 'package:book_ease/screens/admin/components/reuse_dash_card.dart';
-import 'package:book_ease/screens/admin/managebook/add_book_form.dart';
-import 'package:book_ease/screens/admin/managebook/book_data.dart';
-import 'package:book_ease/screens/admin/managebook/edit_book.dart';
-import 'package:book_ease/screens/admin/managebook/view_book.dart';
-import 'package:book_ease/widgets/admin_buttons_widget.dart';
+import 'package:book_ease/base_url.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:book_ease/screens/admin/managebook/add_book_form.dart';
+import 'package:book_ease/screens/admin/managebook/edit_book.dart';
+import 'package:book_ease/screens/admin/managebook/view_book.dart';
+import 'package:book_ease/screens/admin/components/reuse_dash_card.dart';
 import 'package:book_ease/screens/admin/components/action_buttons.dart';
-import 'package:book_ease/screens/admin/components/paginated_table.dart';
 import 'package:book_ease/screens/admin/components/search_admin.dart';
 import 'package:book_ease/screens/admin/components/table_controller.dart';
+import 'package:book_ease/screens/admin/components/paginated_table.dart';
+import 'package:book_ease/widgets/admin_buttons_widget.dart';
 
 class BookManagementApp extends StatelessWidget {
   const BookManagementApp({super.key});
@@ -34,324 +35,284 @@ class BookManagementScreen extends StatefulWidget {
 }
 
 class _BookManagementScreenState extends State<BookManagementScreen> {
-  late Future<List<Map<String, String>>> futureBooks;
-  List<Map<String, String>> books = [];
-  List<bool> selectedRows = [];
-
-
+  List<Map<String, String>> _originalDataList = [];
   late TableController<Map<String, String>> controller;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    futureBooks = fetchBookList();
-    futureBooks.then((data) {
-      setState(() {
-        books = data;
-// ✅ Save original books
-        selectedRows = List.filled(books.length, false);
-        controller = TableController<Map<String, String>>(
-          dataList: List.from(books),
-          onPageChange: () => setState(() {}),
-        );
-      });
-    });
+    fetchBooks();
+  }
+
+  Future<void> fetchBooks() async {
+    try {
+      final response = await Dio().get('${ApiConfig.baseUrl}/get-all');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data["data"];
+        final List<Map<String, String>> parsed =
+            data.map<Map<String, String>>((json) {
+          return {
+            'bookId': json['book_id'].toString(),
+            'title': json['title'] ?? '',
+            'author': json['author'] ?? '',
+            'year': json['year_published'].toString(),
+            'version': json['version'].toString(),
+            'isbn': json['isbn'] ?? '',
+            'copies': json['available_copies'].toString(),
+            'section': json['library_section'] ?? '',
+            'shelfLocation': json['shelf_location'] ?? '',
+            'category': json['category'] ?? '',
+            'condition': json['book_condition'] ?? '',
+            'description': json['description'] ?? '',
+            'image': json['picture'] ?? '',
+          };
+        }).toList();
+
+        setState(() {
+          _originalDataList = parsed;
+          controller = TableController<Map<String, String>>(
+            dataList: parsed,
+            onPageChange: () => setState(() {}),
+          );
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching books: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent, // Make the background transparent
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
           child: ReusableDashboardCard(
-            outerPadding: const EdgeInsets.all(0), // ✅ No bottom padding
+            outerPadding: const EdgeInsets.all(0),
             padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
             width: double.infinity,
-            child: FutureBuilder<List<Map<String, String>>>(
-              future: futureBooks,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else {
-                  books = snapshot.data!;
-                  selectedRows = List.filled(books.length, false);
-
-                  controller = TableController<Map<String, String>>(
-                    dataList: List.from(books),
-                    onPageChange: () => setState(() {}),
-                  );
-
-                  return Column(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ActionButtonRow(
-                            isButtonEnabled: controller.isButtonEnabled,
-                            onPdfPressed: () {
-                              // TODO: Export PDF logic
-                            },
-                            onExcelPressed: () {
-                              // TODO: Export Excel logic
-                            },
-                          ),
-                          const Spacer(),
-                          Expanded(
-                          flex: 3,
-                          child: SearchTable<Map<String, String>>(
-                            originalData: books, // ✅ no _originalBooks copy needed
-                            searchableFields: const ['title', 'bookId', 'category', 'year', 'condition'], // ✅ searchable fields
-                            getFieldValue: (book) => book['title'] ?? '', // ✅ search based mainly on title
-                            hintText: 'Search books...',
-                            onFiltered: (filteredBooks) {
-                              setState(() {
-                                controller.dataList = filteredBooks;
-                                controller.selectedRows = List.generate(filteredBooks.length, (_) => false); // ✅ reset selection if needed
-                              });
-                            },
-                          ),
-                        ),
-
-                          const SizedBox(width: 20),
-                          CustomButton(
-                            text: "Add New Book",
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => const AddBookForm(),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-
+                      _buildActionButtons(),
                       const SizedBox(height: 20),
-                      Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minWidth: constraints.maxWidth,
-                                ),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.vertical,
-                                  child: DataTable(
-                                    sortColumnIndex: controller.sortColumnIndex,
-                                    sortAscending: controller.ascending,
-                                    headingRowColor:
-                                        MaterialStateColor.resolveWith(
-                                      (_) => const Color(0xFFB8D9D6),
-                                    ),
-                                    columns: [
-                                      DataColumn(
-                                        label: Checkbox(
-                                          value: controller.isAllSelected,
-                                          onChanged: (value) => controller
-                                              .toggleSelectAll(value, () {
-                                            setState(() {});
-                                          }),
-                                          activeColor: Colors.teal,
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label:
-                                            buildSortableColumnLabel('Book ID'),
-                                        onSort: (i, asc) => controller.sort(
-                                          (d) => d['bookId']!,
-                                          i,
-                                          asc,
-                                          () => setState(() {}),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label:
-                                            buildSortableColumnLabel('Title'),
-                                        onSort: (i, asc) => controller.sort(
-                                          (d) => d['title']!,
-                                          i,
-                                          asc,
-                                          () => setState(() {}),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label:
-                                            buildSortableColumnLabel('Author'),
-                                        onSort: (i, asc) => controller.sort(
-                                          (d) => d['author']!,
-                                          i,
-                                          asc,
-                                          () => setState(() {}),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: buildSortableColumnLabel('Year'),
-                                        onSort: (i, asc) => controller.sort(
-                                          (d) => d['year']!,
-                                          i,
-                                          asc,
-                                          () => setState(() {}),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: buildSortableColumnLabel(
-                                            'Category'),
-                                        onSort: (i, asc) => controller.sort(
-                                          (d) => d['category']!,
-                                          i,
-                                          asc,
-                                          () => setState(() {}),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: buildSortableColumnLabel(
-                                            'Condition'),
-                                        onSort: (i, asc) => controller.sort(
-                                          (d) => d['condition']!,
-                                          i,
-                                          asc,
-                                          () => setState(() {}),
-                                        ),
-                                      ),
-                                      const DataColumn(
-                                        label: Text('Action',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                    rows: List.generate(
-                                        controller.currentPageData.length,
-                                        (index) {
-                                      final book =
-                                          controller.currentPageData[index];
-                                      final actualIndex =
-                                          controller.currentPage *
-                                                  controller.rowsPerPage +
-                                              index;
-                                      final isSelected =
-                                          controller.selectedRows[actualIndex];
-
-                                      return DataRow(
-                                        color: MaterialStateColor.resolveWith(
-                                            (states) {
-                                          if (isSelected) {
-                                            return Colors.teal.shade50;
-                                          }
-                                          return index.isEven
-                                              ? Colors.transparent
-                                              : Colors.grey.shade100;
-                                        }),
-                                        cells: [
-                                          DataCell(
-                                            Checkbox(
-                                              value: isSelected,
-                                              onChanged: (val) {
-                                                controller
-                                                    .toggleSingleRowSelection(
-                                                        index, () {
-                                                  setState(() {});
-                                                });
-                                              },
-                                              activeColor: Colors.teal,
-                                            ),
-                                          ),
-                                          DataCell(Text(book['bookId']!)),
-                                          DataCell(SizedBox(
-                                            width: 150,
-                                            child: Text(
-                                              book['title']!,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          )),
-                                          DataCell(Text(book['author']!)),
-                                          DataCell(Text(book['year']!)),
-                                          DataCell(Text(book['category']!)),
-                                          DataCell(buildBooksStatusChip(
-                                              book['condition']!)),
-                                          DataCell(
-                                            Row(
-                                              children: [
-                                                Tooltip(
-                                                  message: 'View Book',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons
-                                                          .remove_red_eye_outlined,
-                                                      size: 20,
-                                                      color: Colors.black,
-                                                    ),
-                                                    onPressed: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder: (context) =>
-                                                            ViewBookModal(
-                                                                book: book),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Tooltip(
-                                                  message: 'Edit Book',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons.edit_outlined,
-                                                      size: 20,
-                                                      color: Colors.black,
-                                                    ),
-                                                    onPressed: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder: (context) =>
-                                                            EditBookForm(
-                                                                book: book),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    }),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(
-                          height: 10), // ✅ Tiny margin instead of big padding
-                      PaginationWidget(
-                        currentPage: controller.currentPage,
-                        rowsPerPage: controller.rowsPerPage,
-                        totalRows: controller.dataList.length,
-                        onFirstPage: controller.paginationController.firstPage,
-                        onPreviousPage:
-                            controller.paginationController.previousPage,
-                        onNextPage: controller.paginationController.nextPage,
-                        onLastPage: controller.paginationController.lastPage,
-                        onRowsPerPageChanged: (value) {
-                          controller.updateRowsPerPage(value, () {
-                            setState(() {});
-                          });
-                        },
-                      ),
+                      _buildBookTable(),
+                      const SizedBox(height: 10),
+                      _buildPagination(),
                     ],
-                  );
-                }
-              },
-            ),
+                  ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        ActionButtonRow(
+          isButtonEnabled: controller.isButtonEnabled,
+          onPdfPressed: () {
+            // TODO: Export to PDF
+          },
+          onExcelPressed: () {
+            // TODO: Export to Excel
+          },
+        ),
+        const Spacer(),
+        SearchTable<Map<String, String>>(
+          originalData: _originalDataList,
+          searchableFields: [
+            'bookId',
+            'title',
+            'author',
+            'year',
+            'category',
+            'condition',
+          ],
+          getFieldValue: (item) => item.values.join(' '),
+          hintText: 'Search books...',
+          onFiltered: (filteredData) {
+            setState(() {
+              controller.updateDataList(filteredData);
+            });
+          },
+        ),
+        const SizedBox(width: 20),
+        CustomButton(
+          text: "Add New Book",
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const AddBookForm(),
+            ).then((_) => fetchBooks());
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBookTable() {
+    return Expanded(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: DataTable(
+                  sortColumnIndex: controller.sortColumnIndex,
+                  sortAscending: controller.ascending,
+                  headingRowColor: MaterialStateColor.resolveWith(
+                      (_) => const Color(0xFFB8D9D6)),
+                  columns: _buildTableColumns(),
+                  rows: _buildTableRows(),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  List<DataColumn> _buildTableColumns() {
+    return [
+      DataColumn(
+        label: Checkbox(
+          value: controller.isAllSelected,
+          onChanged: (value) =>
+              controller.toggleSelectAll(value, () => setState(() {})),
+          activeColor: Colors.teal,
+        ),
+      ),
+      _sortableColumn('Book ID', 'bookId'),
+      _sortableColumn('Title', 'title'),
+      _sortableColumn('Author', 'author'),
+      _sortableColumn('Year', 'year'),
+      _sortableColumn('Category', 'category'),
+      _sortableColumn('Condition', 'condition'),
+      const DataColumn(
+          label: Text('Action', style: TextStyle(fontWeight: FontWeight.bold))),
+    ];
+  }
+
+  DataColumn _sortableColumn(String label, String field) {
+    return DataColumn(
+      label: Row(
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          const Icon(Icons.unfold_more, size: 16),
+        ],
+      ),
+      onSort: (i, asc) =>
+          controller.sort((d) => d[field]!, i, asc, () => setState(() {})),
+    );
+  }
+
+  List<DataRow> _buildTableRows() {
+    return List.generate(
+      controller.currentPageData.length,
+      (index) {
+        final book = controller.currentPageData[index];
+        final actualIndex =
+            controller.currentPage * controller.rowsPerPage + index;
+        final isSelected = controller.selectedRows[actualIndex];
+
+        return DataRow(
+          color: MaterialStateColor.resolveWith(
+            (states) => isSelected
+                ? Colors.teal.shade50
+                : index.isEven
+                    ? Colors.transparent
+                    : Colors.grey.shade100,
+          ),
+          cells: _buildRowCells(book, index, isSelected),
+        );
+      },
+    );
+  }
+
+  List<DataCell> _buildRowCells(
+      Map<String, String> book, int index, bool isSelected) {
+    return [
+      DataCell(
+        Checkbox(
+          value: isSelected,
+          onChanged: (val) {
+            controller.toggleSingleRowSelection(index, () => setState(() {}));
+          },
+          activeColor: Colors.teal,
+        ),
+      ),
+      DataCell(Text(book['bookId']!)),
+      DataCell(SizedBox(
+          width: 150,
+          child: Text(book['author']!, overflow: TextOverflow.ellipsis))),
+      DataCell(SizedBox(
+          width: 150,
+          child: Text(book['title']!, overflow: TextOverflow.ellipsis))),
+      DataCell(Text(book['year']!)),
+      DataCell(Text(book['category']!)),
+      DataCell(buildBooksStatusChip(book['condition']!)),
+      DataCell(
+        Row(
+          children: [
+            Tooltip(
+              message: 'View Book',
+              child: IconButton(
+                icon: const Icon(Icons.remove_red_eye, size: 20),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => ViewBookModal(book: book),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Edit Book',
+              child: IconButton(
+                icon: const Icon(Icons.edit_outlined,
+                    size: 20, color: Colors.black),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => EditBookForm(book: book),
+                  ).then((_) => fetchBooks());
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildPagination() {
+    return PaginationWidget(
+      currentPage: controller.currentPage,
+      rowsPerPage: controller.rowsPerPage,
+      totalRows: controller.dataList.length,
+      onFirstPage: controller.paginationController.firstPage,
+      onPreviousPage: controller.paginationController.previousPage,
+      onNextPage: controller.paginationController.nextPage,
+      onLastPage: controller.paginationController.lastPage,
+      onRowsPerPageChanged: (value) {
+        controller.updateRowsPerPage(value, () {
+          setState(() {});
+        });
+      },
     );
   }
 }

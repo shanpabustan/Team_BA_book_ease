@@ -20,13 +20,13 @@ class _ManageUserState extends State<ManageUser> {
       body: Padding(
         padding: const EdgeInsets.only(left: 20.0, top: 20.0, right: 20.0),
         child: Container(
-          color: Colors.white,
+          color: Colors.transparent,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // User Table Section
               Expanded(
-                child: UserManagementTable(),
+                child: UserManagementApp(),
               ),
 
               const SizedBox(height: 20),

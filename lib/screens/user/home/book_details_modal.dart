@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
-
 class BookDetailScreen extends StatelessWidget {
   final dynamic book;
 
@@ -50,14 +49,15 @@ class BookDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         const SizedBox(height: 16),
-                         _infoRow("Author", book.author, fontSize: 15),
-                            _infoRow("Year Published", book.year, fontSize: 15),
-                            _infoRow("ISBN", book.isbn, fontSize: 15),
-                            _infoRow("Shelf Location", book.shelfLocation, fontSize: 15),
-                            _infoRow("Library Section", book.librarySection, fontSize: 15),
-                            _infoRow("Available Copies", "${book.copies}", fontSize: 15),
-                            
-
+                        _infoRow("Author", book.author, fontSize: 15),
+                        _infoRow("Year Published", book.year, fontSize: 15),
+                        _infoRow("ISBN", book.isbn, fontSize: 15),
+                        _infoRow("Shelf Location", book.shelfLocation,
+                            fontSize: 15),
+                        _infoRow("Library Section", book.librarySection,
+                            fontSize: 15),
+                        _infoRow("Available Copies", "${book.copies}",
+                            fontSize: 15),
                       ],
                     ),
                   ),

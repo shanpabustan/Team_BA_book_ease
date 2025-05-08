@@ -40,6 +40,8 @@ class Book {
       reserveCount: json['reserved_count'] ?? 0,
     );
   }
+
+  toJson() {}
 }
 
 class BorrowedBook {
@@ -70,18 +72,23 @@ class BorrowedBook {
   });
 
   factory BorrowedBook.fromJson(Map<String, dynamic> json) {
-    return BorrowedBook(
-      bookId: json['book_id'],
-      title: json['title'],
-      copies: json['copies'],
-      dueDate: json['due_date'],
-      image: json['picture'],
-      author: json['author'] ?? "Unknown",
-      year: json['year_published']?.toString() ?? "Unknown",
-      isbn: json['isbn'] ?? "Unknown",
-      shelfLocation: json['shelf_location'] ?? "Unknown",
-      librarySection: json['library_section'] ?? "Unknown",
-      description: json['description'] ?? "No description",
-    );
-  }
+  String rawImage = json['picture'] ?? '';
+  
+
+  final cleanedImage = rawImage.split('base64,').last;
+
+  return BorrowedBook(
+    bookId: json['book_id'],
+    title: json['title'],
+    copies: json['copies'],
+    dueDate: json['due_date'],
+    image: cleanedImage,
+    author: json['author'] ?? "Unknown",
+    year: json['year_published']?.toString() ?? "Unknown",
+    isbn: json['isbn'] ?? "Unknown",
+    shelfLocation: json['shelf_location'] ?? "Unknown",
+    librarySection: json['library_section'] ?? "Unknown",
+    description: json['description'] ?? "No description",
+  );
+}
 }

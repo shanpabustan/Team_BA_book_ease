@@ -1,8 +1,12 @@
+import 'package:book_ease/base_url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_glow/flutter_glow.dart';
 import 'package:book_ease/modals/logout_modal.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dio/dio.dart';
+import 'package:book_ease/screens/auth/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Sidebar extends StatefulWidget {
   final int selectedIndex;
@@ -22,25 +26,62 @@ class _SidebarState extends State<Sidebar> {
   int _hoverIndex = -1;
   bool _isHovered = false;
 
-  void showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => LogoutModal(
-        onCancel: () => Navigator.pop(context),
-        onLogout: () {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                "Logged out successfully.",
-                style: GoogleFonts.poppins(),
-              ),
+void showLogoutDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (_) => LogoutModal(
+      onCancel: () => Navigator.pop(context),
+      onLogout: () async {
+        Navigator.pop(context); // Close the modal first
+
+        try {
+          final dio = Dio();
+          final response = await dio.post(
+            '${ApiConfig.baseUrl}/stud/logout', // Replace with your actual backend URL
+            options: Options(
+              headers: {
+                'Content-Type': 'application/json',
+              },
             ),
           );
-        },
-      ),
-    );
-  }
+
+          if (response.statusCode == 200 && response.data['retCode'] == '200') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  "Logged out successfully.",
+                  style: GoogleFonts.poppins(),
+                ),
+              ),
+            );
+
+            // Clear the shared preferences for login state and user type
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.remove('isLoggedIn');
+            await prefs.remove('userType');
+
+            // Redirect to login screen
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LogBookEaseApp(),
+              ),
+              (route) => false,
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Logout failed.")),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Logout error: $e")),
+          );
+        }
+      },
+    ),
+  );
+}
 
   Widget _buildMenuItem(IconData icon, String title, int index) {
     final isHovered = _hoverIndex == index;

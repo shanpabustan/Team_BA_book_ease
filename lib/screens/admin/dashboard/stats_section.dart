@@ -1,8 +1,14 @@
 // stats_section.dart
 import 'package:flutter/material.dart';
 import 'package:book_ease/screens/admin/dashboard/dashboard_screen.dart'; // Adjust this import based on your file structure
+import 'package:book_ease/screens/admin/dashboard/stats_section_data.dart'; 
+
 
 class StatsSection extends StatelessWidget {
+  final DashboardService _dashboardService = DashboardService();
+
+  StatsSection({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -10,50 +16,67 @@ class StatsSection extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: StatCard(
-              title: 'Registered Users',
-              value: '1030',
-              icon: Icons.person,
-              borderColor: Colors.blueAccent,
-              iconBgColor: Colors.blue[200]!,
-            ),
+          buildStatFutureCard(
+            future: _dashboardService.fetchStudentCount(),
+            title: 'Registered Users',
+            icon: Icons.person,
+            borderColor: Colors.blueAccent,
+            iconBgColor: Colors.blue[200]!,
           ),
           SizedBox(width: 10),
-          Expanded(
-            child: StatCard(
-              title: 'Borrowed Books',
-              value: '3054',
-              icon: Icons.book,
-              borderColor: Colors.greenAccent,
-              iconBgColor: Colors.green[200]!,
-            ),
+          buildStatFutureCard(
+            future: _dashboardService.fetchBorrowedBooksCount(),
+            title: 'Borrowed Books',
+            icon: Icons.book,
+            borderColor: Colors.greenAccent,
+            iconBgColor: Colors.green[200]!,
           ),
           SizedBox(width: 10),
-          Expanded(
-            child: StatCard(
-              title: 'Reservations',
-              value: '2051',
-              icon: Icons.event,
-              borderColor: Colors.orangeAccent,
-              iconBgColor: Colors.orange[200]!,
-            ),
+          buildStatFutureCard(
+            future: _dashboardService.fetchReservationsCount(),
+            title: 'Reservations',
+            icon: Icons.event,
+            borderColor: Colors.orangeAccent,
+            iconBgColor: Colors.orange[200]!,
           ),
           SizedBox(width: 10),
-          Expanded(
-            child: StatCard(
-              title: 'Overdue Books',
-              value: '20',
-              icon: Icons.warning,
-              borderColor: Colors.redAccent,
-              iconBgColor: Colors.red[200]!,
-            ),
+          buildStatFutureCard(
+            future: _dashboardService.fetchOverdueBooksCount(),
+            title: 'Overdue Books',
+            icon: Icons.warning,
+            borderColor: Colors.redAccent,
+            iconBgColor: Colors.red[200]!,
           ),
         ],
       ),
     );
   }
+
+  Widget buildStatFutureCard({
+    required Future<int> future,
+    required String title,
+    required IconData icon,
+    required Color borderColor,
+    required Color iconBgColor,
+  }) {
+    return Expanded(
+      child: FutureBuilder<int>(
+        future: future,
+        builder: (context, snapshot) {
+          String value = snapshot.hasData ? snapshot.data.toString() : '...';
+          return StatCard(
+            title: title,
+            value: value,
+            icon: icon,
+            borderColor: borderColor,
+            iconBgColor: iconBgColor,
+          );
+        },
+      ),
+    );
+  }
 }
+
 
 class StatCard extends StatelessWidget {
   final String title;
