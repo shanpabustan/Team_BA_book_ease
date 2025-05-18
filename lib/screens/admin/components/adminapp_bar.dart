@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:book_ease/screens/admin/dashboard/notification_page.dart';
 import 'package:book_ease/provider/user_data.dart';
 import 'package:provider/provider.dart';
-import 'package:dio/dio.dart';
+import 'package:book_ease/provider/notification_service.dart';
+import 'package:book_ease/data/notification_data.dart';
 
 class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -25,37 +26,35 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
 class _AppBarWidgetState extends State<AppBarWidget> {
   final GlobalKey _notifIconKey = GlobalKey();
   OverlayEntry? _popupEntry;
-  int unreadCount = 0;
+  List<AppNotification> _notifications = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = context.read<UserData>().userID;
-      if (userId.isNotEmpty) {
-        fetchUnreadNotifications(userId);
-      }
-    });
+    _fetchNotifications();
   }
 
-  Future<void> fetchUnreadNotifications(String userId) async {
-    try {
-      final response = await Dio().get(
-        '${ApiConfig.baseUrl}/notifications/unread',
-        queryParameters: {'user_id': userId},
-      );
+  Future<void> _fetchNotifications() async {
+    final userId = context.read<UserData>().userID;
+    if (userId.isEmpty) return;
 
-      if (response.statusCode == 200) {
-        final count = response.data['unreadCount'] ?? 0;
+    try {
+      final service = NotificationService();
+      final notifications = await service.fetchNotifications(userId);
+      if (mounted) {
         setState(() {
-          unreadCount = count;
+          _notifications = notifications;
+          _isLoading = false;
         });
-        print("Unread count updated: $unreadCount");
-      } else {
-        print('Error loading unread count: ${response.statusCode}');
       }
     } catch (e) {
-      print('Failed to load unread notifications: $e');
+      print('Failed to load notifications: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -63,7 +62,6 @@ class _AppBarWidgetState extends State<AppBarWidget> {
     if (_popupEntry != null) {
       _popupEntry!.remove();
       _popupEntry = null;
-      print('Popup removed');
       return;
     }
 
@@ -75,13 +73,21 @@ class _AppBarWidgetState extends State<AppBarWidget> {
       builder: (context) => Positioned(
         top: position.dy + 40,
         left: position.dx - 280,
-        child: NotificationPopup(userId: userId),
+        child: NotificationPopup(
+          userId: userId,
+          onNotificationsUpdated: (notifications) {
+            setState(() {
+              _notifications = notifications;
+            });
+          },
+        ),
       ),
     );
 
     Overlay.of(context).insert(_popupEntry!);
-    print('Popup inserted');
   }
+
+  int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   @override
   Widget build(BuildContext context) {
@@ -118,34 +124,38 @@ class _AppBarWidgetState extends State<AppBarWidget> {
             Row(
               children: [
                 Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     IconButton(
                       key: _notifIconKey,
-                      icon: const Icon(Icons.notifications, color: Colors.black87),
+                      icon: const Icon(Icons.notifications, color: Colors.black87, size: 28),
                       onPressed: () => _toggleNotificationPopup(context, userId),
                     ),
-                    if (unreadCount > 0)
+                    if (!_isLoading && unreadCount > 0)
                       Positioned(
-                        right: 6,
-                        top: 6,
+                        right: 0,
+                        top: 0,
                         child: Container(
-                          padding: const EdgeInsets.all(2),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.red,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
+                            minWidth: 18,
+                            minHeight: 18,
                           ),
-                          child: Text(
-                            unreadCount > 9 ? '9+' : unreadCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                          child: Center(
+                            child: Text(
+                              unreadCount > 9 ? '9+' : unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                         ),
                       ),
@@ -154,7 +164,7 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                 const SizedBox(width: 10),
                 const CircleAvatar(
                   radius: 20,
-                  backgroundImage: AssetImage('assets/images/lebron.png'),
+                  backgroundImage: AssetImage('assets/images/bini.jpg'),
                 ),
               ],
             ),

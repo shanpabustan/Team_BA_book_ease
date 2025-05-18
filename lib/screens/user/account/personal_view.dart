@@ -1,9 +1,10 @@
+import 'package:book_ease/screens/user/app_text_styles.dart';
+import 'package:book_ease/utils/navigator_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'package:book_ease/provider/user_data.dart'; // Import your UserData provider
 import 'personal_edit.dart';
-
-
+import 'package:book_ease/screens/admin/admin_theme.dart';
 
 class PersonalInfoScreen extends StatelessWidget {
   const PersonalInfoScreen({super.key});
@@ -19,17 +20,17 @@ class PersonalInfoScreen extends StatelessWidget {
         : "${userData.firstName} ${userData.middleName} ${userData.lastName}";
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Personal Information",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
+          style: AppTextStyles.appBarTitle.copyWith(
             color: Colors.white,
+            fontFamily: 'Poppins', // Optional if you want to enforce Poppins
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.teal,
+        backgroundColor: AdminColor.secondaryBackgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -43,12 +44,7 @@ class PersonalInfoScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 10),
             _sectionTitle("Basic Info", onEditPressed: () {
-            Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const PersonalInfoEditScreen(), // No data passed
-            ),
-          );
+              fadePush(context, const PersonalInfoEditScreen());
             }),
             _buildInfoTile(Icons.badge, userData.userID, "ID Number"),
             _buildInfoTile(Icons.person, fullName, "Fullname"),
@@ -80,10 +76,13 @@ class PersonalInfoScreen extends StatelessWidget {
         if (onEditPressed != null)
           TextButton.icon(
             onPressed: onEditPressed,
-            icon: const Icon(Icons.edit, size: 18, color: Colors.teal),
+            icon: const Icon(Icons.edit,
+                size: 18, color: AdminColor.secondaryBackgroundColor),
             label: const Text(
               "Edit",
-              style: TextStyle(color: Colors.teal, fontFamily: 'Poppins'),
+              style: TextStyle(
+                  color: AdminColor.secondaryBackgroundColor,
+                  fontFamily: 'Poppins'),
             ),
           ),
       ],
@@ -94,15 +93,21 @@ class PersonalInfoScreen extends StatelessWidget {
   Widget _buildInfoTile(IconData icon, String title, String subtitle) {
     return Card(
       elevation: 0,
+      color: AdminColor.lightGreenBackground, // 🌿 Added background color
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: ListTile(
-        leading: Icon(icon, color: Colors.teal),
+        leading: Icon(icon, color: AdminColor.secondaryBackgroundColor),
         title: Text(
           title,
           style: const TextStyle(
-              fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins',
+          ),
         ),
-        subtitle: Text(subtitle, style: const TextStyle(fontFamily: 'Poppins')),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(fontFamily: 'Poppins'),
+        ),
       ),
     );
   }

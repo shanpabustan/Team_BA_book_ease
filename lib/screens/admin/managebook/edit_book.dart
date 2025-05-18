@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:book_ease/base_url.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
+import 'package:book_ease/screens/admin/managebook/reusable_form.dart';
 import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:book_ease/utils/warning_snack_bar.dart';
 import 'package:book_ease/widgets/admin_buttons_widget.dart';
+import 'package:book_ease/modals/save_validation_modal.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -50,6 +52,16 @@ class _EditBookFormState extends State<EditBookForm> {
     'Computer Science',
     'Engineering',
     'Mathematics',
+    'Fiction',
+    'Non-Fiction',
+    'Textbooks',
+    'Reference Materials',
+    'Children’s Books',
+    'Young Adult (YA)',
+    'Science & Technology',
+    'History & Social Studies',
+    'Biographies',
+    'Comics & Graphic Novels',
     'Others',
   ];
   final List<String> conditions = ['New', 'Used'];
@@ -73,8 +85,10 @@ class _EditBookFormState extends State<EditBookForm> {
     _isbnController = TextEditingController(text: widget.book['isbn']);
     _totalCopiesController = TextEditingController(text: widget.book['copies']);
     _sectionController = TextEditingController(text: widget.book['section']);
-    _shelfLocationController = TextEditingController(text: widget.book['shelfLocation']);
-    _descriptionController = TextEditingController(text: widget.book['description']);
+    _shelfLocationController =
+        TextEditingController(text: widget.book['shelfLocation']);
+    _descriptionController =
+        TextEditingController(text: widget.book['description']);
     _customCategoryController = TextEditingController();
 
     _selectedCategory = widget.book['category'];
@@ -85,45 +99,44 @@ class _EditBookFormState extends State<EditBookForm> {
   }
 
   // Method to pick an image
-void _pickImage() async {
-  // Check permissions only if not on web
-  if (!kIsWeb) {
-    var status = await Permission.photos.request();
-    if (!status.isGranted) {
+  void _pickImage() async {
+    // Check permissions only if not on web
+    if (!kIsWeb) {
+      var status = await Permission.photos.request();
+      if (!status.isGranted) {
+        showWarningSnackBar(
+          context,
+          title: 'Permission Denied',
+          message:
+              'Photo permission is not granted. Please allow access to your photos.',
+        );
+        return;
+      }
+    }
+
+    // Pick an image using FilePicker
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+
+    if (result != null && result.files.single.path != null) {
+      if (mounted) {
+        // Check if the widget is still mounted before calling setState
+        setState(() {
+          if (kIsWeb) {
+            _webImageBytes = result.files.single.bytes;
+            _pickedImage = File(''); // Dummy to indicate an image is picked
+          } else {
+            _pickedImage = File(result.files.single.path!);
+          }
+        });
+      }
+    } else {
       showWarningSnackBar(
         context,
-        title: 'Permission Denied',
-        message: 'Photo permission is not granted. Please allow access to your photos.',
+        title: 'No Image Selected',
+        message: 'Please select an image to upload.',
       );
-      return;
     }
   }
-
-  // Pick an image using FilePicker
-  final result = await FilePicker.platform.pickFiles(type: FileType.image);
-
-  if (result != null && result.files.single.path != null) {
-    if (mounted) {  // Check if the widget is still mounted before calling setState
-      setState(() {
-        if (kIsWeb) {
-          _webImageBytes = result.files.single.bytes;
-          _pickedImage = File(''); // Dummy to indicate an image is picked
-        } else {
-          _pickedImage = File(result.files.single.path!);
-        }
-      });
-    }
-  } else {
-    showWarningSnackBar(
-      context,
-      title: 'No Image Selected',
-      message: 'Please select an image to upload.',
-    );
-  }
-}
-
-
-
 
   void _clearAll() {
     _formKey.currentState?.reset();
@@ -147,7 +160,9 @@ void _pickImage() async {
 
   void _saveForm() async {
     if (_formKey.currentState!.validate()) {
-      if (_pickedImage == null && _webImageBytes == null && widget.book['image'] == null) {
+      if (_pickedImage == null &&
+          _webImageBytes == null &&
+          widget.book['image'] == null) {
         showWarningSnackBar(
           context,
           title: 'Image Required',
@@ -178,32 +193,32 @@ void _pickImage() async {
         _customCategoryController.clear();
       }
 
-   Uint8List? bytes;
-if (kIsWeb) {
-  if (_webImageBytes == null && widget.book['image'] == null) {
-    showWarningSnackBar(
-      context,
-      title: 'Image Missing',
-      message: 'No image data found for upload.',
-    );
-    return;
-  }
-  bytes = _webImageBytes;
-} else {
-  if (_pickedImage == null && widget.book['image'] == null) {
-    showWarningSnackBar(
-      context,
-      title: 'Image Missing',
-      message: 'No image data found for upload.',
-    );
-    return;
-  }
-  bytes = _pickedImage != null ? await _pickedImage!.readAsBytes() : null;
-}
+      Uint8List? bytes;
+      if (kIsWeb) {
+        if (_webImageBytes == null && widget.book['image'] == null) {
+          showWarningSnackBar(
+            context,
+            title: 'Image Missing',
+            message: 'No image data found for upload.',
+          );
+          return;
+        }
+        bytes = _webImageBytes;
+      } else {
+        if (_pickedImage == null && widget.book['image'] == null) {
+          showWarningSnackBar(
+            context,
+            title: 'Image Missing',
+            message: 'No image data found for upload.',
+          );
+          return;
+        }
+        bytes = _pickedImage != null ? await _pickedImage!.readAsBytes() : null;
+      }
 
-final base64Image = bytes != null
-    ? base64Encode(bytes)  // Encode to base64 before sending
-    : widget.book['image'];
+      final base64Image = bytes != null
+          ? base64Encode(bytes) // Encode to base64 before sending
+          : widget.book['image'];
 
       final bookId = int.tryParse(_bookIdController.text) ?? 0;
 
@@ -257,50 +272,50 @@ final base64Image = bytes != null
     }
   }
 
-Widget _getImageWidget() {
-  if (kIsWeb && _webImageBytes != null) {
-    return Image.memory(
-      _webImageBytes!,
-      fit: BoxFit.cover, // Image will cover the container with potential cropping
-    );
-  } else if (!kIsWeb && _pickedImage != null) {
-    return Image.file(
-      _pickedImage!,
-      fit: BoxFit.cover, // Image will cover the container with potential cropping
-    );
-  }
-
-  // Check for 'image' instead of 'picture'
-  if (widget.book['image'] != null) {
-    String base64Image = widget.book['image'];
-
-    // Check for valid base64 characters
-    if (base64Image.contains(RegExp(r'[^A-Za-z0-9+/=]'))) {
-      print("Invalid base64 string detected.");
-    }
-
-    // Clean the base64 string if necessary
-    if (base64Image.startsWith('data:image')) {
-      base64Image = base64Image.split(',').last;
-    }
-
-    try {
+  Widget _getImageWidget() {
+    if (kIsWeb && _webImageBytes != null) {
       return Image.memory(
-        base64Decode(base64Image),  // Decode base64 image data
-        fit: BoxFit.cover, // Image will cover the container with potential cropping
+        _webImageBytes!,
+        fit: BoxFit
+            .cover, // Image will cover the container with potential cropping
       );
-    } catch (e) {
-      print("Base64 decoding error: $e");
+    } else if (!kIsWeb && _pickedImage != null) {
+      return Image.file(
+        _pickedImage!,
+        fit: BoxFit
+            .cover, // Image will cover the container with potential cropping
+      );
     }
+
+    // Check for 'image' instead of 'picture'
+    if (widget.book['image'] != null) {
+      String base64Image = widget.book['image'];
+
+      // Check for valid base64 characters
+      if (base64Image.contains(RegExp(r'[^A-Za-z0-9+/=]'))) {
+        print("Invalid base64 string detected.");
+      }
+
+      // Clean the base64 string if necessary
+      if (base64Image.startsWith('data:image')) {
+        base64Image = base64Image.split(',').last;
+      }
+
+      try {
+        return Image.memory(
+          base64Decode(base64Image), // Decode base64 image data
+          fit: BoxFit
+              .cover, // Image will cover the container with potential cropping
+        );
+      } catch (e) {
+        print("Base64 decoding error: $e");
+      }
+    }
+
+    return const Center(
+      child: Icon(Icons.image, size: 100, color: Colors.grey),
+    );
   }
-
-  return const Center(
-    child: Icon(Icons.image, size: 100, color: Colors.grey),
-  );
-}
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -379,47 +394,48 @@ Widget _getImageWidget() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-   GestureDetector(
-  onTap: _pickImage, // Call the _pickImage function here to allow uploading a new image
-  child: Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.grey.shade300), // Border styling
-      borderRadius: BorderRadius.circular(12), // Rounded corners
-    ),
-    child: Column(
-      children: [
-        const Text(
-          'Upload Image',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+          GestureDetector(
+            onTap:
+                _pickImage, // Call the _pickImage function here to allow uploading a new image
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border:
+                    Border.all(color: Colors.grey.shade300), // Border styling
+                borderRadius: BorderRadius.circular(12), // Rounded corners
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Upload Image',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Display the picked image if available or the icon otherwise
+                  _pickedImage != null || _webImageBytes != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            height: 160, // Fixed height for the image container
+                            //width: double.infinity,
+                            child:
+                                _getImageWidget(), // Display the image using the _getImageWidget method
+                          ),
+                        )
+                      : const Icon(
+                          Icons.image,
+                          size: 100,
+                          color: Colors.grey,
+                        ),
+                ],
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        // Display the picked image if available or the icon otherwise
-        _pickedImage != null || _webImageBytes != null
-    ? ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          height: 160, // Fixed height for the image container
-          //width: double.infinity,
-          child: _getImageWidget(), // Display the image using the _getImageWidget method
-        ),
-      )
-    : const Icon(
-        Icons.image,
-        size: 100,
-        color: Colors.grey,
-      ),
-      ],
-    ),
-  ),
-),
-
-
           const SizedBox(height: 16),
           _buildCategoryDropdown(),
           if (_selectedCategory == 'Others') ...[
@@ -477,7 +493,8 @@ Widget _getImageWidget() {
         border: const OutlineInputBorder(),
       ),
       validator: (value) {
-        if (_selectedCategory == 'Others' && (value == null || value.trim().isEmpty)) {
+        if (_selectedCategory == 'Others' &&
+            (value == null || value.trim().isEmpty)) {
           return 'Please enter a custom category';
         }
         return null;
@@ -517,13 +534,15 @@ Widget _getImageWidget() {
           color: AdminColor.secondaryBackgroundColor,
         ),
         alignLabelWithHint: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 43, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 43, horizontal: 16),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: AdminColor.secondaryBackgroundColor),
         ),
         border: const OutlineInputBorder(),
       ),
-      validator: (value) => value == null || value.isEmpty ? 'Description is required' : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Description is required' : null,
     );
   }
 
@@ -547,9 +566,9 @@ Widget _getImageWidget() {
             ),
             const SizedBox(height: 16),
             CustomTextFormField(
-              controller: _bookIdController,
-              label: 'Book ID',
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+                controller: _bookIdController,
+                label: 'Book ID',
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
             CustomTextFormField(
               controller: _titleController,
               label: 'Title',
@@ -562,34 +581,42 @@ Widget _getImageWidget() {
               children: [
                 Expanded(
                   child: CustomTextFormField(
-                    controller: _yearController,
-                    label: 'Year of Publication',
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+                      controller: _yearController,
+                      label: 'Year of Publication',
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly
+                      ]),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: CustomTextFormField(
                     label: 'Version',
                     controller: _versionController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d{0,2}')),
                     ],
                   ),
                 ),
               ],
             ),
             CustomTextFormField(
-              controller: _isbnController,
               label: 'ISBN',
+              controller: _isbnController,
+              inputFormatters: [ISBNInputFormatter()],
+              keyboardType: TextInputType.number,
             ),
             Row(
               children: [
                 Expanded(
                   child: CustomTextFormField(
-                    controller: _totalCopiesController,
-                    label: 'Total Copies',
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
+                      controller: _totalCopiesController,
+                      label: 'Total Copies',
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly
+                      ]),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -625,7 +652,20 @@ Widget _getImageWidget() {
         const SizedBox(width: 12),
         CustomButton(
           text: 'Save',
-          onPressed: _saveForm,
+          onPressed: () {
+            if (_formKey.currentState!.validate()) {
+              showDialog(
+                context: context,
+                builder: (context) => SaveValidationModal(
+                  onCancel: () => Navigator.pop(context),
+                  onSave: () {
+                    Navigator.pop(context); // Close the modal
+                    _saveForm(); // Call the existing save method
+                  },
+                ),
+              );
+            }
+          },
           backgroundColor: AdminColor.secondaryBackgroundColor,
           textColor: Colors.white,
         ),
@@ -660,13 +700,15 @@ class CustomTextFormField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Colors.black),
-          floatingLabelStyle: const TextStyle(color: AdminColor.secondaryBackgroundColor),
+          floatingLabelStyle:
+              const TextStyle(color: AdminColor.secondaryBackgroundColor),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: AdminColor.secondaryBackgroundColor),
           ),
           border: const OutlineInputBorder(),
         ),
-        validator: (value) => value == null || value.isEmpty ? '$label is required' : null,
+        validator: (value) =>
+            value == null || value.isEmpty ? '$label is required' : null,
       ),
     );
   }

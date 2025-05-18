@@ -53,7 +53,7 @@ class ActionButtonRow extends StatelessWidget {
         ActionButton(
           icon: Icons.picture_as_pdf,
           label: 'PDF',
-          color: Colors.blue,
+          color: Colors.red,
           isButtonEnabled: isButtonEnabled,
           onPressed: onPdfPressed,
         ),

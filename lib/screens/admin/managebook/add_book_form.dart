@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:book_ease/base_url.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
+import 'package:book_ease/screens/admin/managebook/reusable_form.dart';
 import 'package:book_ease/widgets/admin_buttons_widget.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -12,8 +13,6 @@ import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:book_ease/utils/warning_snack_bar.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-
 
 class AddBookForm extends StatefulWidget {
   const AddBookForm({Key? key}) : super(key: key);
@@ -37,7 +36,8 @@ class _AddBookFormState extends State<AddBookForm> {
   final TextEditingController _shelfLocationController =
       TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _customCategoryController = TextEditingController();
+  final TextEditingController _customCategoryController =
+      TextEditingController();
 
   String? _selectedCategory;
   String? _selectedCondition;
@@ -53,7 +53,7 @@ class _AddBookFormState extends State<AddBookForm> {
     'Non-Fiction',
     'Textbooks',
     'Reference Materials',
-    'Children’s Books',
+    "Children's Books",
     'Young Adult (YA)',
     'Science & Technology',
     'History & Social Studies',
@@ -62,9 +62,7 @@ class _AddBookFormState extends State<AddBookForm> {
     'Others',
   ];
 
-
   List<String> _categories = [];
-
   final List<String> conditions = ['New', 'Used'];
 
   @override
@@ -73,42 +71,46 @@ class _AddBookFormState extends State<AddBookForm> {
     _categories = List.from(_baseCategories);
   }
 
-    // Method to pick an image
-void _pickImage() async {
-  // Check permissions only if not on web
-  if (!kIsWeb) {
-    var status = await Permission.photos.request();
-    if (!status.isGranted) {
-      showWarningSnackBar(
-        context,
-        title: 'Permission Denied',
-        message: 'Photo permission is not granted. Please allow access to your photos.',
-      );
-      return;
+  // Method to pick an image
+  void _pickImage() async {
+    // Check permissions only if not on web
+    if (!kIsWeb) {
+      var status = await Permission.photos.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          showWarningSnackBar(
+            context,
+            title: 'Permission Denied',
+            message:
+                'Photo permission is not granted. Please allow access to your photos.',
+          );
+        }
+        return;
+      }
+    }
+
+    // Pick an image using FilePicker
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        if (kIsWeb) {
+          _webImageBytes = result.files.single.bytes;
+          _pickedImage = File(''); // Dummy to indicate an image is picked
+        } else {
+          _pickedImage = File(result.files.single.path!);
+        }
+      });
+    } else {
+      if (mounted) {
+        showWarningSnackBar(
+          context,
+          title: 'No Image Selected',
+          message: 'Please select an image to upload.',
+        );
+      }
     }
   }
-
-  // Pick an image using FilePicker
-  final result = await FilePicker.platform.pickFiles(type: FileType.image);
-
-  if (result != null && result.files.single.path != null) {
-    setState(() {
-      if (kIsWeb) {
-        _webImageBytes = result.files.single.bytes;
-        _pickedImage = File(''); // Dummy to indicate an image is picked
-      } else {
-        _pickedImage = File(result.files.single.path!);
-      }
-    });
-  } else {
-    showWarningSnackBar(
-      context,
-      title: 'No Image Selected',
-      message: 'Please select an image to upload.',
-    );
-  }
-}
-
 
   // Clear all form fields
   void _clearAll() {
@@ -124,154 +126,200 @@ void _pickImage() async {
     _shelfLocationController.clear();
     _descriptionController.clear();
     _customCategoryController.clear();
-    _pickedImage = null;
     setState(() {
+      _pickedImage = null;
+      _webImageBytes = null;
       _selectedCategory = null;
       _selectedCondition = null;
     });
   }
 
   void _saveForm() async {
-  if (_formKey.currentState!.validate()) {
-    // Check if image is null
-    if (_pickedImage == null && _webImageBytes == null) {
-      showWarningSnackBar(
-        context,
-        title: 'Image Required',
-        message: 'Please upload an image to proceed.',
-      );
-      return;
-    }
-
-    // Handle custom category if "Others" was selected
-    if (_selectedCategory == 'Others') {
-      final customCategory = _customCategoryController.text.trim();
-      if (customCategory.isEmpty) {
+    if (_formKey.currentState!.validate()) {
+      // Check if image is null
+      if (_pickedImage == null && _webImageBytes == null) {
         showWarningSnackBar(
           context,
-          title: 'Category Required',
-          message: 'Please enter a custom category name.',
+          title: 'Image Required',
+          message: 'Please upload an image to proceed.',
         );
         return;
       }
 
-      if (!_categories.contains(customCategory)) {
-        setState(() {
-          _categories.insert(_categories.length - 1, customCategory);
-        });
+      // Handle custom category if "Others" was selected
+      if (_selectedCategory == 'Others') {
+        final customCategory = _customCategoryController.text.trim();
+        if (customCategory.isEmpty) {
+          showWarningSnackBar(
+            context,
+            title: 'Category Required',
+            message: 'Please enter a custom category name.',
+          );
+          return;
+        }
+
+        if (!_categories.contains(customCategory)) {
+          setState(() {
+            _categories.insert(_categories.length - 1, customCategory);
+          });
+        }
+
+        _selectedCategory = customCategory;
+      } else {
+        _customCategoryController.clear();
       }
 
-      _selectedCategory = customCategory;
-    } else {
-      _customCategoryController.clear();
-    }
+      // Ensure image is available before proceeding
+      Uint8List bytes;
+      try {
+        if (kIsWeb) {
+          if (_webImageBytes == null) {
+            showErrorSnackBar(
+              context,
+              title: 'Image Missing',
+              message: 'No image data found for upload.',
+            );
+            return;
+          }
+          bytes = _webImageBytes!;
+        } else {
+          if (_pickedImage == null) {
+            showErrorSnackBar(
+              context,
+              title: 'Image Missing',
+              message: 'No image data found for upload.',
+            );
+            return;
+          }
+          bytes = await _pickedImage!.readAsBytes();
+        }
 
-    // Ensure image is available before proceeding
-    Uint8List bytes;
-    if (kIsWeb) {
-      if (_webImageBytes == null) {
-        print("Error: _webImageBytes is null on web.");
+        final base64Image = base64Encode(bytes);
+
+        final bookData = {
+          'book_id': int.tryParse(_bookIdController.text) ?? 0,
+          'title': _titleController.text.trim(),
+          'author': _authorController.text.trim(),
+          'category': _selectedCategory,
+          'isbn': _isbnController.text.trim(),
+          'library_section': _sectionController.text.trim(),
+          'shelf_location': _shelfLocationController.text.trim(),
+          'total_copies': int.tryParse(_totalCopiesController.text) ?? 0,
+          'available_copies': int.tryParse(_totalCopiesController.text) ?? 0,
+          'book_condition': _selectedCondition,
+          'picture': base64Image,
+          'year_published': int.tryParse(_yearController.text) ?? 0,
+          'version': int.tryParse(_versionController.text) ?? 1,
+          'description': _descriptionController.text.trim(),
+        };
+
+        final dio = Dio();
+        dio.options.connectTimeout =
+            const Duration(seconds: 30); // 30 seconds timeout
+        dio.options.receiveTimeout = const Duration(seconds: 15);
+        dio.options.sendTimeout = const Duration(seconds: 15);
+
+        try {
+          final response = await dio.post(
+            '${ApiConfig.baseUrl}/admin/add-book',
+            data: bookData,
+            options: Options(
+              headers: {'Content-Type': 'application/json'},
+              validateStatus: (status) => true,
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 15),
+            ),
+          );
+
+          print('Response status: ${response.statusCode}');
+          print('Response data: ${response.data}');
+
+          if (response.statusCode == 200 && response.data['retCode'] == '200') {
+            showSuccessSnackBar(
+              context,
+              title: 'Success',
+              message: 'Book added successfully.',
+            );
+            await Future.delayed(const Duration(seconds: 1));
+            if (mounted) Navigator.pop(context);
+          } else {
+            String errorMessage = 'Failed to add book.';
+            if (response.data != null && response.data['message'] != null) {
+              errorMessage = response.data['message'];
+            } else if (response.statusCode != 200) {
+              errorMessage = 'Server error: ${response.statusCode}';
+            }
+            showErrorSnackBar(
+              context,
+              title: 'Failed',
+              message: errorMessage,
+            );
+          }
+        } on DioException catch (e) {
+          print('DioException type: ${e.type}');
+          print('DioException message: ${e.message}');
+          print('DioException response: ${e.response}');
+
+          String errorMessage;
+          switch (e.type) {
+            case DioExceptionType.connectionTimeout:
+            case DioExceptionType.sendTimeout:
+            case DioExceptionType.receiveTimeout:
+              errorMessage = 'Request timed out. Please try again.';
+              break;
+            case DioExceptionType.connectionError:
+              errorMessage =
+                  'Could not connect to the server. Please check if the server is running.';
+              break;
+            case DioExceptionType.badResponse:
+              errorMessage =
+                  'Server error: ${e.response?.statusCode ?? "Unknown"}\n${e.response?.data?['message'] ?? ""}';
+              break;
+            default:
+              errorMessage = 'An unexpected error occurred: ${e.message}';
+          }
+          showErrorSnackBar(
+            context,
+            title: 'Connection Error',
+            message: errorMessage,
+          );
+        } catch (e) {
+          print('General error: $e');
+          showErrorSnackBar(
+            context,
+            title: 'Error',
+            message: 'Failed to process request: $e',
+          );
+        }
+      } catch (e) {
         showErrorSnackBar(
           context,
-          title: 'Image Missing',
-          message: 'No image data found for upload.',
+          title: 'Error',
+          message: 'Failed to process image or submit book. Please try again.',
         );
-        return;
       }
-      bytes = _webImageBytes!;
-    } else {
-      if (_pickedImage == null) {
-        print("Error: _pickedImage is null on mobile.");
-        showErrorSnackBar(
-          context,
-          title: 'Image Missing',
-          message: 'No image data found for upload.',
-        );
-        return;
-      }
-      bytes = await _pickedImage!.readAsBytes();
-    }
-
-    final base64Image = base64Encode(bytes);
-
-    final bookData = {
-      'book_id': int.tryParse(_bookIdController.text) ?? 0,
-      'title': _titleController.text.trim(),
-      'author': _authorController.text.trim(),
-      'category': _selectedCategory,
-      'isbn': _isbnController.text.trim(),
-      'library_section': _sectionController.text.trim(),
-      'shelf_location': _shelfLocationController.text.trim(),
-      'total_copies': int.tryParse(_totalCopiesController.text) ?? 0,
-      'available_copies': int.tryParse(_totalCopiesController.text) ?? 0,
-      'book_condition': _selectedCondition,
-      'picture': base64Image,
-      'year_published': int.tryParse(_yearController.text) ?? 0,
-      'version': int.tryParse(_versionController.text) ?? 1,
-      'description': _descriptionController.text.trim(),
-    };
-
-    try {
-      final dio = Dio();
-      final response = await dio.post(
-        '${ApiConfig.baseUrl}/admin/add-book',
-        data: bookData,
-        options: Options(headers: {'Content-Type': 'application/json'}),
-      );
-
-      if (response.statusCode == 200 && response.data['retCode'] == '200') {
-  // Show success SnackBar
-  showSuccessSnackBar(
-    context,
-    title: 'Success',
-    message: 'Book added successfully.',
-  );
-
-  // Delay Navigator.pop() to allow SnackBar to show
-  await Future.delayed(const Duration(seconds: 1)); // Adjust delay as needed
-  Navigator.pop(context);
-} else {
-  showErrorSnackBar(
-    context,
-    title: 'Failed',
-    message: response.data['message'] ?? 'Failed to add book.',
-  );
-}
-
-    } catch (e) {
-      print('Error during book submission: $e');
-      showErrorSnackBar(
-        context,
-        title: 'Error',
-        message: 'Error adding book. Please try again.',
-      );
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.transparent, // Set background to transparent
+      backgroundColor: Colors.transparent,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(
-            maxWidth: 900, maxHeight: 800), // Apply constraints here
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
         child: ClipRRect(
-          borderRadius:
-              BorderRadius.circular(12), // Apply border radius to the dialog
+          borderRadius: BorderRadius.circular(12),
           child: Scaffold(
             body: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header / AppBar Style
+                // Header
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: const BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(color: Colors.grey, width: 0.5),
-                    ),
+                        bottom: BorderSide(color: Colors.grey, width: 0.5)),
                   ),
                   child: Row(
                     children: [
@@ -294,13 +342,12 @@ void _pickImage() async {
                           ),
                         ),
                       ),
-                      const SizedBox(
-                          width: 48), // Placeholder to align the title center
+                      const SizedBox(width: 48),
                     ],
                   ),
                 ),
 
-                // Scrollable Content
+                // Form Content
                 Expanded(
                   child: SingleChildScrollView(
                     child: Form(
@@ -310,48 +357,54 @@ void _pickImage() async {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // LEFT COLUMN
+                            // Left Column
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                        GestureDetector(
-                          onTap:
-                              _pickImage, // Call the _pickImage function here
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                const Text('Upload Image'),
-                                const SizedBox(height: 12),
-                                _pickedImage != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: kIsWeb
-                                              ? (_webImageBytes != null
-                                                  ? Image.memory(
-                                                      _webImageBytes!,
-                                                      height: 160,
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : const Icon(Icons.image, size: 100, color: Colors.grey))
-                                              : Image.file(
-                                                  _pickedImage!,
-                                                  height: 160,
-                                                  fit: BoxFit.cover,
+                                  GestureDetector(
+                                    onTap: _pickImage,
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                            color: Colors.grey.shade300),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const Text('Upload Image'),
+                                          const SizedBox(height: 12),
+                                          _pickedImage != null
+                                              ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: kIsWeb
+                                                      ? (_webImageBytes != null
+                                                          ? Image.memory(
+                                                              _webImageBytes!,
+                                                              height: 160,
+                                                              fit: BoxFit.cover,
+                                                            )
+                                                          : const Icon(
+                                                              Icons.image,
+                                                              size: 100,
+                                                              color:
+                                                                  Colors.grey))
+                                                      : Image.file(
+                                                          _pickedImage!,
+                                                          height: 160,
+                                                          fit: BoxFit.cover,
+                                                        ),
                                                 )
-                                      )
-                                    : const Icon(Icons.image,
-                                        size: 100, color: Colors.grey),
-                              ],
-                            ),
-                          ),
-                        ),
+                                              : const Icon(Icons.image,
+                                                  size: 100,
+                                                  color: Colors.grey),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                   const SizedBox(height: 16),
                                   DropdownButtonFormField<String>(
                                     value: _selectedCategory,
@@ -478,8 +531,7 @@ void _pickImage() async {
                               ),
                             ),
                             const SizedBox(width: 32),
-
-                            // RIGHT COLUMN
+                            // Right Column
                             Expanded(
                               child: Container(
                                 padding: const EdgeInsets.all(16),
@@ -545,6 +597,8 @@ void _pickImage() async {
                                     BookTextField(
                                       label: 'ISBN',
                                       controller: _isbnController,
+                                      inputFormatters: [ISBNInputFormatter()],
+                                      keyboardType: TextInputType.number,
                                     ),
                                     Row(
                                       children: [
@@ -609,40 +663,41 @@ void _pickImage() async {
     );
   }
 }
-      class BookTextField extends StatelessWidget {
-        final String label;
-        final TextEditingController controller;
-        final List<TextInputFormatter>? inputFormatters;
-        final TextInputType? keyboardType;
 
-        const BookTextField({
-          required this.label,
-          required this.controller,
-          this.inputFormatters,
-          super.key,
-          this.keyboardType,
-        });
+class BookTextField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextInputType? keyboardType;
 
-        @override
-        Widget build(BuildContext context) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
-            child: TextFormField(
-              controller: controller,
-              inputFormatters: inputFormatters,
-              keyboardType: keyboardType,
-              decoration: InputDecoration(
-                labelText: label,
-                floatingLabelStyle:
-                    const TextStyle(color: AdminColor.secondaryBackgroundColor),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AdminColor.secondaryBackgroundColor),
-                ),
-                border: const OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  value == null || value.isEmpty ? '$label is required' : null,
-            ),
-          );
-        }
-      }
+  const BookTextField({
+    required this.label,
+    required this.controller,
+    this.inputFormatters,
+    this.keyboardType,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        inputFormatters: inputFormatters,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          floatingLabelStyle:
+              const TextStyle(color: AdminColor.secondaryBackgroundColor),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AdminColor.secondaryBackgroundColor),
+          ),
+          border: const OutlineInputBorder(),
+        ),
+        validator: (value) =>
+            value == null || value.isEmpty ? '$label is required' : null,
+      ),
+    );
+  }
+}

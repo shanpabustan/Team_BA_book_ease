@@ -14,6 +14,14 @@ void showCustomSnackBar(
   final screenWidth = MediaQuery.of(context).size.width;
   final isDesktop = screenWidth >= 900;
 
+  // Calculate the height based on the text length
+  final titleTextHeight =
+      (title.length > 30) ? 24.0 : 18.0; // Adjust based on title length
+  final messageTextHeight =
+      (message.length > 50) ? 36.0 : 24.0; // Adjust based on message length
+  final totalHeight =
+      titleTextHeight + messageTextHeight + 40.0; // Extra space for padding
+
   OverlayEntry overlayEntry = OverlayEntry(
     builder: (context) => Positioned(
       top: 30,
@@ -23,7 +31,7 @@ void showCustomSnackBar(
         color: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          height: isDesktop ? 90 : 80, // smaller height on mobile
+          height: totalHeight, // Adjusted height based on content
           width: isDesktop ? 480 : double.infinity,
           decoration: BoxDecoration(
             color: backgroundColor,

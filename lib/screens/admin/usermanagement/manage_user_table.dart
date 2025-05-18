@@ -3,7 +3,6 @@ import 'package:book_ease/screens/admin/components/action_buttons.dart';
 import 'package:book_ease/screens/admin/usermanagement/view_user.dart';
 import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
-import 'package:book_ease/utils/warning_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,6 +11,7 @@ import 'package:book_ease/screens/admin/components/reuse_dash_card.dart';
 import 'package:book_ease/screens/admin/components/search_admin.dart';
 import 'package:book_ease/screens/admin/components/table_controller.dart';
 import 'package:book_ease/screens/admin/components/paginated_table.dart';
+import 'package:book_ease/services/export_service.dart';
 
 class UserManagementApp extends StatelessWidget {
   const UserManagementApp({super.key});
@@ -127,11 +127,27 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       children: [
         ActionButtonRow(
           isButtonEnabled: controller.isButtonEnabled,
-          onPdfPressed: () {
-            // TODO: Export to PDF
+          onPdfPressed: () async {
+            final selectedUsers = _getSelectedUsers();
+            if (selectedUsers.isEmpty) return;
+
+            await ExportService.exportToPdf(
+              title: 'Users Report',
+              headers: ['User ID', 'Name', 'Email', 'Course', 'Year Level', 'Status'],
+              data: ExportService.formatUserData(selectedUsers),
+              fileName: 'users_report',
+            );
           },
-          onExcelPressed: () {
-            // TODO: Export to Excel
+          onExcelPressed: () async {
+            final selectedUsers = _getSelectedUsers();
+            if (selectedUsers.isEmpty) return;
+
+            await ExportService.exportToExcel(
+              title: 'Users',
+              headers: ['User ID', 'Name', 'Email', 'Course', 'Year Level', 'Status'],
+              data: ExportService.formatUserData(selectedUsers),
+              fileName: 'users_report',
+            );
           },
         ),
         const Spacer(),
@@ -267,51 +283,48 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ),
           ),
           Tooltip(
-  message: 'Unblock User',
-  child: IconButton(
-    icon: const Icon(Icons.lock_open, size: 20),
-    onPressed: () {
-      showDialog(
-        context: context,
-        builder: (_) => UnblockDataModal(
-          onCancel: () => Navigator.pop(context), // Close the modal on cancel
-          onUnblock: () async {
-            final userId = user['userId']; // Get userId from the user data
-            try {
-              final response = await Dio().put(
-                '${ApiConfig.baseUrl}/admin/unblock-student/$userId', // Corrected URL
-              );
+            message: 'Unblock User',
+            child: IconButton(
+              icon: const Icon(Icons.lock_open, size: 20),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => UnblockDataModal(
+                    onCancel: () => Navigator.pop(context), // Close the modal on cancel
+                    onUnblock: () async {
+                      final userId = user['userId']; // Get userId from the user data
+                      try {
+                        final response = await Dio().put(
+                          '${ApiConfig.baseUrl}/admin/unblock-student/$userId', // Corrected URL
+                        );
 
-              if (response.statusCode == 200) {
-                showSuccessSnackBar(
-                  context,
-                  title: 'Success',
-                  message: 'User unblocked successfully!',
+                        if (response.statusCode == 200) {
+                          showSuccessSnackBar(
+                            context,
+                            title: 'Success',
+                            message: 'User unblocked successfully!',
+                          );
+                          _fetchUsers(); // Refresh the UI or user data
+                        } else {
+                          showErrorSnackBar(
+                            context,
+                            title: 'Error',
+                            message: 'Failed to unblock user: ${response.statusMessage}',
+                          );
+                        }
+                      } catch (e) {
+                        showErrorSnackBar(
+                          context,
+                          title: 'Error',
+                          message: 'An error occurred: $e',
+                        );
+                      }
+                    },
+                  ),
                 );
-                _fetchUsers(); // Refresh the UI or user data
-              } else {
-                showErrorSnackBar(
-                  context,
-                  title: 'Error',
-                  message: 'Failed to unblock user: ${response.statusMessage}',
-                );
-              }
-            } catch (e) {
-              showErrorSnackBar(
-                context,
-                title: 'Error',
-                message: 'An error occurred: $e',
-              );
-            }
-          },
-        ),
-      );
-    },
-  ),
-)
-
-
-
+              },
+            ),
+          ),
         ],
       )),
     ];
@@ -332,5 +345,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         });
       },
     );
+  }
+
+  List<Map<String, String>> _getSelectedUsers() {
+    List<Map<String, String>> selectedUsers = [];
+    for (int i = 0; i < controller.selectedRows.length; i++) {
+      if (controller.selectedRows[i]) {
+        selectedUsers.add(controller.dataList[i]);
+      }
+    }
+    return selectedUsers;
   }
 }

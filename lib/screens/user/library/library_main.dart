@@ -68,33 +68,46 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Stack(
       children: [
         Scaffold(
+          backgroundColor: Colors.white, // Set Scaffold background white
           appBar: AppBarWidget(
             onNotificationPressed: _toggleNotificationOverlay,
             unreadCount: _notifications.where((n) => !n.isRead).length,
           ),
-          body: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      UIComponents.sectionTitle('Explore Library Books'),
-                      const SizedBox(height: 10),
-                      UIComponents.selectCategory(_selectedCategory),
-                      const SizedBox(height: 10),
-                    ],
+          body: Container(
+            color: Colors.white, // Background white behind CustomScrollView
+            child: CustomScrollView(
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _FixedHeaderDelegate(
+                    height: 60,
+                    child: Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 10,
+                      ),
+                      child: UIComponents.selectCategory(_selectedCategory),
+                    ),
                   ),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: BookGrid(userId: userId), // must be non-scrollable
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 10,
+                    ),
+                    child: UIComponents.sectionTitle('Explore Library Books'),
+                  ),
                 ),
-              ),
-            ],
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: BookGrid(userId: userId),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (_showNotifications)
@@ -104,5 +117,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
     );
+  }
+}
+
+class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _FixedHeaderDelegate({required this.child, required this.height});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox(
+      height: height,
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_FixedHeaderDelegate oldDelegate) {
+    return oldDelegate.height != height || oldDelegate.child != child;
   }
 }

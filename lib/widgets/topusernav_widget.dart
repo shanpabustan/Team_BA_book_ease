@@ -1,6 +1,9 @@
+import 'package:book_ease/screens/user/app_text_styles.dart';
+import 'package:book_ease/screens/user/library/favourite_books_screen.dart';
+import 'package:book_ease/utils/navigator_helper.dart';
+import 'package:book_ease/utils/search_book_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:book_ease/widgets/search_widget.dart';
 import 'package:book_ease/main.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
@@ -21,15 +24,14 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         children: [
           Text(
             "BookEase",
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            style: AppTextStyles.appBarTitle.copyWith(
+              color: Colors.white, // Add color override if needed
             ),
           ),
         ],
       ),
       actions: [
+        // Search icon
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6.0),
           child: Container(
@@ -42,26 +44,17 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             child: IconButton(
               icon: const Icon(Icons.search, color: Colors.white, size: 20),
               onPressed: () {
-                Navigator.of(context).push(PageRouteBuilder(
-                  transitionDuration: const Duration(milliseconds: 150),
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      const SearchScreen(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
-                  },
-                ));
+                fadePush(context, const SearchBookScreen());
               },
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
           ),
         ),
+
+        // Notification icon with badge
         Padding(
-          padding: const EdgeInsets.only(right: 8.0),
+          padding: const EdgeInsets.only(right: 6.0),
           child: Stack(
             children: [
               Container(
@@ -105,6 +98,27 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
             ],
+          ),
+        ),
+
+        // Favorite icon (newly added)
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white24,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.favorite, color: Colors.white, size: 20),
+              onPressed: () {
+                fadePush(context, const FavouriteBooksScreen());
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
           ),
         ),
       ],

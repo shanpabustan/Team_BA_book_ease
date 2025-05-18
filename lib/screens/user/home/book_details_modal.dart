@@ -1,6 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:book_ease/screens/admin/admin_theme.dart'; // Ensure you have AdminColor imported
+import 'package:book_ease/screens/user/app_text_styles.dart';
 
 class BookDetailScreen extends StatelessWidget {
   final dynamic book;
@@ -12,85 +14,107 @@ class BookDetailScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return FractionallySizedBox(
-      heightFactor: 0.7,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.memory(
-                      base64Decode(book.image.split(',').last),
-                      height: screenHeight * 0.3,
-                      width: screenWidth * 0.35,
-                      fit: BoxFit.cover,
-                    ),
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    base64Decode(book.image.split(',').last),
+                    height: screenHeight * 0.3,
+                    width: screenWidth * 0.4,
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Text(
-                            book.title,
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        const SizedBox(height: 16),
-                        _infoRow("Author", book.author, fontSize: 15),
-                        _infoRow("Year Published", book.year, fontSize: 15),
-                        _infoRow("ISBN", book.isbn, fontSize: 15),
-                        _infoRow("Shelf Location", book.shelfLocation,
-                            fontSize: 15),
-                        _infoRow("Library Section", book.librarySection,
-                            fontSize: 15),
-                        _infoRow("Available Copies", "${book.copies}",
-                            fontSize: 15),
-                      ],
-                    ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  book.title,
+                  style: GoogleFonts.poppins(
+                    fontSize: AppTextStyles.pageTitle.fontSize,
+                    fontWeight: AppTextStyles.pageTitle.fontWeight,
+                    color: Colors.black87,
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text(
+                ),
+                const SizedBox(height: 12),
+                _infoRowWithIcon(Icons.person, "Author", book.author),
+                _infoRowWithIcon(
+                    Icons.calendar_today, "Year Published", book.year),
+                _infoRowWithIcon(Icons.book, "ISBN", book.isbn),
+                _infoRowWithIcon(
+                    Icons.location_on, "Shelf Location", book.shelfLocation),
+                _infoRowWithIcon(
+                    Icons.category, "Library Section", book.librarySection),
+                _infoRowWithIcon(Icons.production_quantity_limits,
+                    "Available Copies", "${book.copies}"),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
                 "Description",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                  fontWeight: AppTextStyles.sectionTitle.fontWeight,
+                  fontSize: AppTextStyles.sectionTitle.fontSize,
+                  color: Colors.grey.shade800,
+                ),
               ),
-              const SizedBox(height: 10),
-              Text(book.description ?? "No description available."),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              book.description ?? "No description available.",
+              textAlign: TextAlign.justify,
+              style: GoogleFonts.poppins(
+                fontSize: AppTextStyles.body.fontSize,
+                height: 1.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  static Widget _infoRow(String label, String? value, {double fontSize = 14}) {
+  Widget _infoRowWithIcon(IconData icon, String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "$label: ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
-          ),
+          Icon(icon, size: 24, color: AdminColor.secondaryBackgroundColor),
+          const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              value ?? "N/A",
-              style: TextStyle(fontSize: fontSize),
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: AppTextStyles.body.fontSize,
+                ),
+                children: [
+                  TextSpan(
+                    text: "$label: ",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: AppTextStyles.body.fontSize,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value ?? "N/A",
+                    style: GoogleFonts.poppins(
+                        fontSize: AppTextStyles.body.fontSize),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -99,14 +123,21 @@ class BookDetailScreen extends StatelessWidget {
   }
 }
 
-// Function to show the bottom sheet
 void showBookDetailModal(BuildContext context, dynamic book) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    backgroundColor: Colors
+        .transparent, // Important to keep transparent to allow rounded corners
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => BookDetailScreen(book: book),
+    builder: (context) => Container(
+      decoration: const BoxDecoration(
+        color: Colors.white, // Set white background here
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: BookDetailScreen(book: book),
+    ),
   );
 }

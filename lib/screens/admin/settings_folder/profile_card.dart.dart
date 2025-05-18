@@ -1,302 +1,14 @@
-// import 'package:book_ease/screens/admin/mock_data/admin_mock_data.dart';
-// import 'package:book_ease/utils/success_snack_bar.dart';
-// import 'package:flutter/material.dart';
-// import 'package:book_ease/screens/admin/admin_theme.dart';
-// import 'package:flutter/services.dart';
-// import '../components/settings_components.dart';
-// import 'package:provider/provider.dart'; // Import provider
-// import 'package:book_ease/provider/user_data.dart';
-
-// class ProfileCard extends StatefulWidget {
-//   const ProfileCard({super.key});
-
-//   @override
-//   State<ProfileCard> createState() => _ProfileCardState();
-// }
-
-// class _ProfileCardState extends State<ProfileCard> {
-//   late UserProfile _profile;
-//   bool _isEditing = false;
-//   bool _isLoading = true;
-
-//   final _formKey = GlobalKey<FormState>();
-
-//   final _firstNameController = TextEditingController();
-//   final _lastNameController = TextEditingController();
-//   final _emailController = TextEditingController();
-//   final _idNumberController = TextEditingController();
-//   final _roleController = TextEditingController();
-//   final _phoneController = TextEditingController();
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadProfile();
-//   }
-
-//   Future<void> _loadProfile() async {
-//     final profile = await UserProfile.fetchDummy();
-//     setState(() {
-//       _profile = profile;
-//       _isLoading = false;
-
-//       _firstNameController.text = profile.firstName;
-//       _lastNameController.text = profile.lastName;
-//       _emailController.text = profile.email;
-//       _idNumberController.text = profile.idNumber;
-//       _roleController.text = profile.role; // This will remain unchanged
-//       _phoneController.text = profile.phoneNumber;
-//     });
-//   }
-
-//   void _toggleEdit() {
-//     setState(() {
-//       _isEditing = !_isEditing;
-//     });
-//   }
-
-//   void _saveProfile() {
-//     if (_formKey.currentState!.validate()) {
-//       setState(() {
-//         _profile = UserProfile(
-//           firstName: _firstNameController.text,
-//           lastName: _lastNameController.text,
-//           email: _emailController.text,
-//           idNumber: _idNumberController.text,
-//           role: _profile.role, // Role remains unchanged
-//           phoneNumber: _phoneController.text,
-//           imageUrl: _profile.imageUrl,
-//         );
-//         _isEditing = false;
-//       });
-//       // Somewhere in your code after a successful profile update
-//       showSuccessSnackBar(
-//         context,
-//         title: 'Success!',
-//         message: 'Profile updated successfully.',
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (_isLoading) {
-//       return const Center(child: CircularProgressIndicator());
-//     }
-
-//     return SettingsCard(
-//       child: SizedBox(
-//         height: 420,
-//         child: Center(
-//           child: Row(
-//             crossAxisAlignment: CrossAxisAlignment.center,
-//             children: [
-//               // LEFT SIDE
-//               Expanded(
-//                 flex: 1,
-//                 child: Column(
-//                   mainAxisSize: MainAxisSize.min,
-//                   children: [
-//                     CircleAvatar(
-//                       radius: 50,
-//                       backgroundImage: NetworkImage(_profile.imageUrl),
-//                     ),
-//                     const SizedBox(height: 12),
-//                     Text(
-//                       "${_profile.firstName} ${_profile.lastName}",
-//                       style: const TextStyle(
-//                           fontSize: 18, fontWeight: FontWeight.bold),
-//                     ),
-//                     Text(_profile.role),
-//                     const SizedBox(height: 12),
-//                     FilledButton.icon(
-//                       onPressed: _isEditing ? _saveProfile : _toggleEdit,
-//                       icon:
-//                           Icon(_isEditing ? Icons.save : Icons.edit, size: 18),
-//                       label: Text(_isEditing ? "Save" : "Edit"),
-//                       style: FilledButton.styleFrom(
-//                         backgroundColor: AdminColor.secondaryBackgroundColor,
-//                         foregroundColor: Colors.white,
-//                         padding: const EdgeInsets.symmetric(
-//                             vertical: 10, horizontal: 16),
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//               const SizedBox(width: 24),
-
-//               // RIGHT SIDE
-//               Expanded(
-//                 flex: 2,
-//                 child: Padding(
-//                   padding: const EdgeInsets.only(right: 16),
-//                   child: Form(
-//                     key: _formKey,
-//                     child: Column(
-//                       mainAxisSize: MainAxisSize.min,
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         const Row(
-//                           children: [
-//                             Text(
-//                               "Personal Information",
-//                               style: TextStyle(
-//                                   fontSize: 18, fontWeight: FontWeight.bold),
-//                             ),
-//                             Spacer(),
-//                           ],
-//                         ),
-//                         const SizedBox(height: 24),
-//                         Row(
-//                           children: [
-//                             Expanded(
-//                               child: _buildField(
-//                                   label: "First Name",
-//                                   controller: _firstNameController),
-//                             ),
-//                             const SizedBox(width: 16),
-//                             Expanded(
-//                               child: _buildField(
-//                                   label: "Last Name",
-//                                   controller: _lastNameController),
-//                             ),
-//                           ],
-//                         ),
-//                         const SizedBox(height: 16),
-//                         Row(
-//                           children: [
-//                             Expanded(
-//                               child: _buildField(
-//                                   label: "Email Address",
-//                                   controller: _emailController,
-//                                   validator: _validateEmail),
-//                             ),
-//                             const SizedBox(width: 16),
-//                             Expanded(
-//                               child: _buildField(
-//                                   label: "ID Number",
-//                                   controller: _idNumberController,
-//                                   validator: _validateStudentId),
-//                             ),
-//                           ],
-//                         ),
-//                         const SizedBox(height: 16),
-//                         Row(
-//                           children: [
-//                             // Use ProfileField for Role (Read-Only)
-//                             Expanded(
-//                               child: ProfileField(
-//                                 label: "Role",
-//                                 value: _profile.role,
-//                               ),
-//                             ),
-//                             const SizedBox(width: 16),
-//                             Expanded(
-//                               child: _buildField(
-//                                   label: "Phone Number",
-//                                   controller: _phoneController,
-//                                   validator: _validatePhone),
-//                             ),
-//                           ],
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//               )
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildField({
-//     required String label,
-//     required TextEditingController controller,
-//     String? Function(String?)? validator,
-//     bool readOnly = false,
-//   }) {
-//     return _isEditing
-//         ? TextFormField(
-//             controller: controller,
-//             decoration: InputDecoration(
-//               labelText: label,
-//               labelStyle: const TextStyle(
-//                 color: AdminColor.secondaryBackgroundColor,
-//               ),
-//               border: const OutlineInputBorder(),
-//               focusedBorder: OutlineInputBorder(
-//                 borderSide: BorderSide(
-//                   color: AdminColor
-//                       .secondaryBackgroundColor, // Set focus border color
-//                   width: 1.0, // Set border width to 1
-//                 ),
-//               ),
-//             ),
-//             validator: validator ?? _defaultValidator,
-//             readOnly: readOnly,
-//             inputFormatters: [
-//               if (controller == _idNumberController ||
-//                   controller == _phoneController)
-//                 FilteringTextInputFormatter.allow(
-//                     RegExp(r'[0-9-]')), // Allow only numbers and dash
-//             ],
-//           )
-//         : ProfileField(label: label, value: controller.text);
-//   }
-
-//   String? _defaultValidator(String? value) {
-//     return (value == null || value.isEmpty) ? "Required" : null;
-//   }
-
-//   String? _validatePhone(String? value) {
-//     if (value == null || value.isEmpty) {
-//       return 'Phone number is required';
-//     }
-//     if (!RegExp(r'^\d+$').hasMatch(value)) {
-//       return 'Only numbers are allowed';
-//     }
-//     if (!RegExp(r'^(09\d{9}|\+639\d{9})$').hasMatch(value)) {
-//       return 'Enter a valid Philippine phone number (e.g., 09123456789 or +639123456789)';
-//     }
-//     return null;
-//   }
-
-//   String? _validateEmail(String? value) {
-//     if (value == null || value.isEmpty) {
-//       return 'Email is required';
-//     }
-//     // This regex matches only the format username@gmail.com
-//     if (!RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$').hasMatch(value)) {
-//       return 'Enter a valid email address with the domain "@gmail.com"';
-//     }
-//     return null;
-//   }
-
-//   String? _validateStudentId(String? value) {
-//     if (value == null || value.isEmpty) {
-//       return 'ID is required';
-//     }
-//     final RegExp studentIdRegex = RegExp(r'^[0-9]+(-[0-9]+)*$');
-//     if (!studentIdRegex.hasMatch(value)) {
-//       return 'ID must contain only numbers and dashes, and not start or end with a dash';
-//     }
-//     return null;
-//   }
-// }
-
 import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/warning_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:flutter/services.dart';
 import '../components/settings_components.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/user_data.dart';
+import 'package:dio/dio.dart';
+import 'package:book_ease/base_url.dart';
 
 class ProfileCard extends StatefulWidget {
   const ProfileCard({super.key});
@@ -308,6 +20,8 @@ class ProfileCard extends StatefulWidget {
 class _ProfileCardState extends State<ProfileCard> {
   bool _isEditing = false;
   bool _isLoading = true;
+  bool _isUpdating = false;
+  final _dio = Dio();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -317,8 +31,19 @@ class _ProfileCardState extends State<ProfileCard> {
   final _idNumberController = TextEditingController();
   final _roleController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _programController = TextEditingController();
+  final _yearLevelController = TextEditingController();
 
-  late String _imageUrl;
+  String _imageUrl = '';
+  
+  final List<String> _avatarChoices = [
+    'assets/icons/j-rizz.png',
+    'assets/icons/boy-icon.png',
+    'assets/icons/girl-icon.png',
+    'assets/icons/girl-2.png',
+    'assets/icons/reading_book.png',
+    'assets/icons/student-boy.png',
+  ];
 
   @override
   void initState() {
@@ -332,13 +57,100 @@ class _ProfileCardState extends State<ProfileCard> {
     setState(() {
       _firstNameController.text = userData.firstName;
       _lastNameController.text = userData.lastName;
+
       _emailController.text = userData.email;
       _idNumberController.text = userData.userID;
       _roleController.text = 'Admin';
       _phoneController.text = userData.contactNumber;
-      _imageUrl = userData.avatarPath;
+      _programController.text = userData.program;
+      _yearLevelController.text = userData.yearLevel;
+      _imageUrl = userData.avatarPath.isNotEmpty ? userData.avatarPath : _avatarChoices[0];
       _isLoading = false;
     });
+  }
+
+  Future<void> _updateAvatar(String avatarPath) async {
+    try {
+      final userId = context.read<UserData>().userID;
+      final response = await _dio.post(
+        '${ApiConfig.baseUrl}/stud/add-pic',
+        data: {
+          'user_id': userId,
+          'avatar_path': avatarPath,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data['RetCode'] == '200') {
+        final userData = Provider.of<UserData>(context, listen: false);
+        userData.setAvatarPath(avatarPath);
+        setState(() {
+          _imageUrl = avatarPath;
+        });
+        showSuccessSnackBar(
+          context,
+          title: 'Success',
+          message: 'Profile picture updated successfully',
+        );
+        Navigator.pop(context);
+      } else {
+        showWarningSnackBar(
+          context,
+          title: 'Update Failed',
+          message: response.data['Message'] ?? 'Failed to update profile picture',
+        );
+      }
+    } catch (e) {
+      showErrorSnackBar(
+        context,
+        title: 'Error',
+        message: 'Failed to update profile picture: ${e.toString()}',
+      );
+    }
+  }
+
+  void _showAvatarPicker() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Choose Your Avatar",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: _avatarChoices.length,
+                itemBuilder: (context, index) {
+                  final avatarPath = _avatarChoices[index];
+                  return GestureDetector(
+                    onTap: () => _updateAvatar(avatarPath),
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage(avatarPath),
+                      backgroundColor: Colors.grey[200],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _toggleEdit() {
@@ -347,19 +159,117 @@ class _ProfileCardState extends State<ProfileCard> {
     });
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // Here, you'd call an API or update Provider if needed
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      setState(() {
-        _isEditing = false;
-      });
+    setState(() => _isUpdating = true);
 
-      showSuccessSnackBar(
-        context,
-        title: 'Success!',
-        message: 'Profile updated successfully.',
+    try {
+      final userId = context.read<UserData>().userID;
+      
+      // Create temporary data structure
+      final Map<String, dynamic> updateData = {
+        'user_id': _idNumberController.text.trim(),  // Use the new ID from the field
+        'email': _emailController.text.trim(),       // Include email in the update
+        'first_name': _firstNameController.text.trim(),
+        'last_name': _lastNameController.text.trim(),
+        'contact_number': _phoneController.text.trim(),
+        'program': _programController.text.trim(),
+        'year_level': _yearLevelController.text.trim(),
+      };
+
+      print('Sending update data: $updateData'); // Debug print
+
+      final response = await _dio.put(
+        '${ApiConfig.baseUrl}/stud/edit',
+        data: updateData,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
+
+      print('Response received: ${response.data}'); // Debug print
+
+      if (response.statusCode == 200) {
+        if (response.data['RetCode'] == '200') {
+          final userData = Provider.of<UserData>(context, listen: false);
+          final updatedData = response.data['Data'];
+          
+          userData.updateUser(
+            firstName: updatedData['first_name'],
+            lastName: updatedData['last_name'],
+            middleName: updatedData['middle_name'] ?? '',
+            suffix: updatedData['suffix'] ?? '',
+            contactNumber: updatedData['contact_number'],
+            program: updatedData['program'],
+            yearLevel: updatedData['year_level'],
+          );
+
+          // Update the user ID and email in the provider
+          userData.setUserData(
+            userID: updatedData['user_id'],
+            userType: updatedData['user_type'],
+            lastName: updatedData['last_name'],
+            firstName: updatedData['first_name'],
+            middleName: updatedData['middle_name'] ?? '',
+            suffix: updatedData['suffix'] ?? '',
+            email: updatedData['email'],
+            program: updatedData['program'],
+            yearLevel: updatedData['year_level'],
+            contactNumber: updatedData['contact_number'],
+            avatarPath: updatedData['avatar_path'],
+          );
+
+          setState(() {
+            _isEditing = false;
+          });
+
+          showSuccessSnackBar(
+            context,
+            title: 'Success!',
+            message: response.data['Message'] ?? 'Profile updated successfully.',
+          );
+        } else {
+          showWarningSnackBar(
+            context,
+            title: 'Update Failed',
+            message: response.data['Message'] ?? 'Failed to update profile',
+          );
+        }
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Server returned status code ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      print('DioError: ${e.message}');
+      print('DioError response: ${e.response?.data}');
+      
+      String errorMessage = 'Failed to update profile';
+      if (e.response?.data != null && e.response?.data['Message'] != null) {
+        errorMessage = e.response?.data['Message'];
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+      
+      showErrorSnackBar(
+        context,
+        title: 'Error',
+        message: errorMessage,
+      );
+    } catch (e) {
+      print('General error: $e');
+      showErrorSnackBar(
+        context,
+        title: 'Error',
+        message: 'An unexpected error occurred: $e',
+      );
+    } finally {
+      setState(() => _isUpdating = false);
     }
   }
 
@@ -382,9 +292,27 @@ class _ProfileCardState extends State<ProfileCard> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: NetworkImage(_imageUrl),
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage: AssetImage(_imageUrl),
+                          backgroundColor: Colors.grey[200],
+                        ),
+                        if (_isEditing)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: CircleAvatar(
+                              radius: 18,
+                              backgroundColor: AdminColor.secondaryBackgroundColor,
+                              child: IconButton(
+                                icon: const Icon(Icons.edit, size: 18, color: Colors.white),
+                                onPressed: _showAvatarPicker,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -397,9 +325,9 @@ class _ProfileCardState extends State<ProfileCard> {
                     Text(_roleController.text),
                     const SizedBox(height: 12),
                     FilledButton.icon(
-                      onPressed: _isEditing ? _saveProfile : _toggleEdit,
+                      onPressed: _isUpdating ? null : (_isEditing ? _saveProfile : _toggleEdit),
                       icon: Icon(_isEditing ? Icons.save : Icons.edit, size: 18),
-                      label: Text(_isEditing ? "Save" : "Edit"),
+                      label: Text(_isUpdating ? "Saving..." : (_isEditing ? "Save" : "Edit")),
                       style: FilledButton.styleFrom(
                         backgroundColor: AdminColor.secondaryBackgroundColor,
                         foregroundColor: Colors.white,
@@ -509,6 +437,7 @@ class _ProfileCardState extends State<ProfileCard> {
     return _isEditing
         ? TextFormField(
             controller: controller,
+            enabled: _isEditing, // Remove the condition that disabled ID and email fields
             decoration: InputDecoration(
               labelText: label,
               labelStyle: const TextStyle(

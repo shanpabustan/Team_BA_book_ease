@@ -10,6 +10,7 @@ import 'package:book_ease/screens/admin/components/action_buttons.dart';
 import 'package:book_ease/screens/admin/components/search_admin.dart';
 import 'package:book_ease/screens/admin/components/table_controller.dart';
 import 'package:book_ease/screens/admin/components/paginated_table.dart';
+import 'package:book_ease/services/export_service.dart';
 
 class BorrowedBooksApp extends StatelessWidget {
   const BorrowedBooksApp({super.key});
@@ -106,11 +107,27 @@ class _BorrowedBooksTableScreenState extends State<BorrowedBooksTableScreen> {
       children: [
         ActionButtonRow(
           isButtonEnabled: controller.isButtonEnabled,
-          onPdfPressed: () {
-            // TODO: Export to PDF
+          onPdfPressed: () async {
+            final selectedBooks = _getSelectedBorrowedBooks();
+            if (selectedBooks.isEmpty) return;
+
+            await ExportService.exportToPdf(
+              title: 'Borrowed Books Report',
+              headers: ['Borrow ID', 'User ID', 'Name', 'Book Name', 'Status', 'Borrow Date', 'Due Date', 'Return Date'],
+              data: ExportService.formatBorrowedBookData(selectedBooks),
+              fileName: 'borrowed_books_report',
+            );
           },
-          onExcelPressed: () {
-            // TODO: Export to Excel
+          onExcelPressed: () async {
+            final selectedBooks = _getSelectedBorrowedBooks();
+            if (selectedBooks.isEmpty) return;
+
+            await ExportService.exportToExcel(
+              title: 'Borrowed Books',
+              headers: ['Borrow ID', 'User ID', 'Name', 'Book Name', 'Status', 'Borrow Date', 'Due Date', 'Return Date'],
+              data: ExportService.formatBorrowedBookData(selectedBooks),
+              fileName: 'borrowed_books_report',
+            );
           },
         ),
         const Spacer(),
@@ -134,6 +151,16 @@ class _BorrowedBooksTableScreenState extends State<BorrowedBooksTableScreen> {
         ),
       ],
     );
+  }
+
+  List<BorrowedBookAdmin> _getSelectedBorrowedBooks() {
+    List<BorrowedBookAdmin> selectedBooks = [];
+    for (int i = 0; i < controller.selectedRows.length; i++) {
+      if (controller.selectedRows[i]) {
+        selectedBooks.add(controller.dataList[i]);
+      }
+    }
+    return selectedBooks;
   }
 
   Widget _buildBorrowedBooksTable() {

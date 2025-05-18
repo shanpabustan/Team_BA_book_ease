@@ -1,9 +1,10 @@
+import 'package:book_ease/screens/auth/email_change_password.dart';
+import 'package:book_ease/utils/navigator_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 import 'package:book_ease/base_url.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:book_ease/utils/error_snack_bar.dart';
@@ -13,6 +14,7 @@ import 'package:book_ease/screens/admin/dashboard/dashboard_screen.dart';
 import 'package:book_ease/provider/user_data.dart';
 import 'multisignup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:book_ease/screens/admin/admin_theme.dart';
 
 void main() {
   runApp(const LogBookEaseApp());
@@ -48,104 +50,112 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
- void _loginUser() async {
-  final Dio dio = Dio();
-  final String apiUrl = "${ApiConfig.baseUrl}/stud/login";
+  void _loginUser() async {
+    final Dio dio = Dio();
+    final String apiUrl = "${ApiConfig.baseUrl}/stud/login";
 
-  try {
-    Response response = await dio.post(
-      apiUrl,
-      data: {
-        "user_id": _idController.text,
-        "password": _passwordController.text,
-      },
-      options: Options(headers: {"Content-Type": "application/json"}),
-    );
-
-    final data = response.data;
-
-    if (data["retCode"] == "200") {
-      final userData = data["data"];
-      String userType = userData["user_type"];
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userID', userData["user_id"]);
-      await prefs.setString('userType', userType);
-
-      if (mounted) {
-        showSuccessSnackBar(
-          context,
-          title: 'Login Successful!',
-          message: 'You have logged in successfully.',
-        );
-      }
-
-      final userProvider = Provider.of<UserData>(context, listen: false);
-      userProvider.setUserData(
-        userID: userData["user_id"],
-        userType: userData["user_type"],
-        lastName: userData["last_name"],
-        firstName: userData["first_name"],
-        middleName: userData["middle_name"],
-        suffix: userData["suffix"],
-        email: userData["email"],
-        program: userData["program"],
-        yearLevel: userData["year_level"],
-        contactNumber: userData["contact_number"],
-        avatarPath: userData["avatar_path"] ?? "",
+    try {
+      Response response = await dio.post(
+        apiUrl,
+        data: {
+          "user_id": _idController.text,
+          "password": _passwordController.text,
+        },
+        options: Options(headers: {"Content-Type": "application/json"}),
       );
 
-      // Route based on user type
-      if (userType == "Admin") {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminDashboard()));
-      } else if (userType == "Student") {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const UserDashApp()));
-      } else {
-        showWarningSnackBar(context, title: 'Login Error', message: 'Unknown user type!');
-      }
-    } else {
-      // Handle custom backend errors
-      final String code = data["retCode"];
-      final String message = data["message"] ?? "Login failed.";
+      final data = response.data;
 
-      if (mounted) {
-        switch (code) {
-          case "401":
-            //showErrorSnackBar(context, title: "Login Failed", message: message);
-            break;
-          case "403":
-            showWarningSnackBar(context, title: "Account Blocked", message: message);
-            break;
-          case "400":
-            showWarningSnackBar(context, title: "Invalid Request", message: message);
-            break;
-          default:
-            showErrorSnackBar(context, title: "Login Failed", message: message);
+      if (data["retCode"] == "200") {
+        final userData = data["data"];
+        String userType = userData["user_type"];
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userID', userData["user_id"]);
+        await prefs.setString('userType', userType);
+
+        if (mounted) {
+          showSuccessSnackBar(
+            context,
+            title: 'Login Successful!',
+            message: 'You have logged in successfully.',
+          );
         }
-      }
-    }
-  } on DioException catch (e) {
-    final res = e.response;
-    if (res != null && res.data != null) {
-      final String message = res.data["message"] ?? "Unexpected error.";
-      final String code = res.data["retCode"] ?? "Unknown";
 
-      if (mounted) {
-        if (code == "500") {
-          showErrorSnackBar(context, title: "Server Error", message: message);
+        final userProvider = Provider.of<UserData>(context, listen: false);
+        userProvider.setUserData(
+          userID: userData["user_id"],
+          userType: userData["user_type"],
+          lastName: userData["last_name"],
+          firstName: userData["first_name"],
+          middleName: userData["middle_name"],
+          suffix: userData["suffix"],
+          email: userData["email"],
+          program: userData["program"],
+          yearLevel: userData["year_level"],
+          contactNumber: userData["contact_number"],
+          avatarPath: userData["avatar_path"] ?? "",
+        );
+
+        // Route based on user type
+        if (userType == "Admin") {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => AdminDashboard()));
+        } else if (userType == "Student") {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const UserDashApp()));
         } else {
-          showWarningSnackBar(context, title: "Login Failed", message: message);
+          showWarningSnackBar(context,
+              title: 'Login Error', message: 'Unknown user type!');
+        }
+      } else {
+        // Handle custom backend errors
+        final String code = data["retCode"];
+        final String message = data["message"] ?? "Login failed.";
+
+        if (mounted) {
+          switch (code) {
+            case "401":
+              //showErrorSnackBar(context, title: "Login Failed", message: message);
+              break;
+            case "403":
+              showWarningSnackBar(context,
+                  title: "Account Blocked", message: message);
+              break;
+            case "400":
+              showWarningSnackBar(context,
+                  title: "Invalid Request", message: message);
+              break;
+            default:
+              showErrorSnackBar(context,
+                  title: "Login Failed", message: message);
+          }
         }
       }
-    } else {
-      if (mounted) {
-        showErrorSnackBar(context, title: "Connection Error", message: "Could not connect to server.");
+    } on DioException catch (e) {
+      final res = e.response;
+      if (res != null && res.data != null) {
+        final String message = res.data["message"] ?? "Unexpected error.";
+        final String code = res.data["retCode"] ?? "Unknown";
+
+        if (mounted) {
+          if (code == "500") {
+            showErrorSnackBar(context, title: "Server Error", message: message);
+          } else {
+            showWarningSnackBar(context,
+                title: "Login Failed", message: message);
+          }
+        }
+      } else {
+        if (mounted) {
+          showErrorSnackBar(context,
+              title: "Connection Error",
+              message: "Could not connect to server.");
+        }
       }
     }
   }
-}
-
 
   @override
   void dispose() {
@@ -157,104 +167,103 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: LayoutBuilder(
           builder: (context, constraints) {
             bool isWideScreen = constraints.maxWidth > 1000;
 
             return SizedBox(
-              height: MediaQuery.of(context).size.height,
-              width: double.infinity,
-              child: isWideScreen
-                  ? Row(
-                      children: [
-                        // 📌 Left Side: Logo with Full Teal Background
-                        Expanded(
-                          flex: 1,
-                          child: Container(
-                            width: double.infinity,
-                            height: double.infinity,
-                            color: Colors.teal,
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset(
-                                  'assets/images/admin_logo.png',
-                                  width:
-                                      constraints.maxWidth > 1200 ? 400 : 350,
-                                  height:
-                                      constraints.maxWidth > 1200 ? 400 : 350,
-                                  fit: BoxFit.contain,
-                                ),
-                                Transform.translate(
-                                  offset: const Offset(0,
-                                      -95), // Moves text **UPWARD** by 20 pixels
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        "BOOKEASE",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 40,
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color.fromARGB(
-                                              255, 255, 255, 255),
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                          height: 2), // Minimal spacing
-                                      Text(
-                                        "BORROW SMART",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 24,
-                                          color: const Color.fromARGB(
-                                              255, 249, 249, 249),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // 📌 Right Side: Login Form
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              top: 50,
-                              left: 50,
-                              right: 50,
-                            ),
-                            child: _buildLoginForm(context, isWideScreen),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                height: MediaQuery.of(context).size.height,
+                width: double.infinity,
+                child: isWideScreen
+                    ? Row(
                         children: [
-                          const SizedBox(height: 60),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 20),
-                            child: Image.asset(
-                              'assets/images/logo-removebg-preview.png',
-                              height: 150,
+                          // 📌 Left Side: Logo with Full Teal Background
+                          Expanded(
+                            flex: 1,
+                            child: Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              color: AdminColor.secondaryBackgroundColor,
+                              alignment: Alignment.center,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/admin_logo_white.png',
+                                    width:
+                                        constraints.maxWidth > 1200 ? 300 : 250,
+                                    height:
+                                        constraints.maxWidth > 1200 ? 300 : 250,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  Transform.translate(
+                                    offset: const Offset(0,
+                                        -15), // Moves text **UPWARD** by 20 pixels
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          "BOOKEASE",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 40,
+                                            fontWeight: FontWeight.w800,
+                                            color: const Color.fromARGB(
+                                                255, 255, 255, 255),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                            height: 2), // Minimal spacing
+                                        Text(
+                                          "BORROW SMART",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 24,
+                                            color: const Color.fromARGB(
+                                                255, 249, 249, 249),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          _buildLoginForm(context, isWideScreen),
+
+                          // 📌 Right Side: Login Form
+                          Expanded(
+                            flex: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                top: 50,
+                                left: 50,
+                                right: 50,
+                              ),
+                              child: _buildLoginForm(context, isWideScreen),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-            );
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: Image.asset(
+                                'assets/images/admin_logo_green.png',
+                                height: 150,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildLoginForm(context, isWideScreen),
+                          ],
+                        ),
+                      ));
           },
         ),
       ),
@@ -276,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 34, // ✅ Larger Text
                   fontWeight: FontWeight.w900, // ✅ Extra Bold
-                  color: Colors.teal,
+                  color: AdminColor.secondaryBackgroundColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -293,12 +302,14 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: InputDecoration(
               labelText: 'ID Number',
               labelStyle: const TextStyle(color: Colors.grey),
-              floatingLabelStyle: const TextStyle(color: Colors.teal),
+              floatingLabelStyle:
+                  const TextStyle(color: AdminColor.secondaryBackgroundColor),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.teal, width: 2),
+                borderSide: const BorderSide(
+                    color: AdminColor.secondaryBackgroundColor, width: 2),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -313,7 +324,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                fadePush(context, EmailForgotPassword());
+              },
               child: const Text(
                 'Forgot password?',
                 style: TextStyle(color: Colors.black),
@@ -327,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
+                backgroundColor: AdminColor.secondaryBackgroundColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -353,18 +366,12 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text("Don't have an account? "),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const MultiStepSignUpScreen(), // ✅ Navigates to Signup
-                    ),
-                  );
+                  fadePush(context, const MultiStepSignUpScreen());
                 },
                 child: const Text(
                   'Sign Up',
                   style: TextStyle(
-                    color: Colors.teal,
+                    color: AdminColor.secondaryBackgroundColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -395,25 +402,27 @@ class _PasswordFieldState extends State<PasswordField> {
     return TextField(
       controller: widget.controller,
       obscureText: isObscured,
-      cursorColor: Colors.teal,
+      cursorColor: AdminColor.secondaryBackgroundColor,
       style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         labelText: 'Password',
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle: const TextStyle(color: Colors.teal),
+        floatingLabelStyle:
+            const TextStyle(color: AdminColor.secondaryBackgroundColor),
         border: OutlineInputBorder(
           borderSide: const BorderSide(
               color: Colors.grey, width: 1.5), // ✅ Fixed border error
           borderRadius: BorderRadius.circular(10), // ✅ Ensure this works
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
+          borderSide: const BorderSide(
+              color: AdminColor.secondaryBackgroundColor, width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
         suffixIcon: IconButton(
           icon: Icon(
             isObscured ? Icons.visibility : Icons.visibility_off,
-            color: Colors.teal,
+            color: AdminColor.secondaryBackgroundColor,
           ),
           onPressed: () {
             setState(() {

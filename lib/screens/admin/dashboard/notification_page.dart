@@ -6,8 +6,13 @@ import 'package:intl/intl.dart';
 
 class NotificationPopup extends StatefulWidget {
   final String userId;
+  final Function(List<AppNotification>)? onNotificationsUpdated;
 
-  const NotificationPopup({super.key, required this.userId});
+  const NotificationPopup({
+    super.key,
+    required this.userId,
+    this.onNotificationsUpdated,
+  });
 
   @override
   State<NotificationPopup> createState() => _NotificationPopupState();
@@ -27,14 +32,32 @@ class _NotificationPopupState extends State<NotificationPopup> {
   Future<void> _loadNotifications() async {
     try {
       final notifications = await _notificationService.fetchNotifications(widget.userId);
-      setState(() {
-        _notifications = notifications;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _notifications = notifications;
+          _isLoading = false;
+        });
+        widget.onNotificationsUpdated?.call(_notifications);
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      print("Failed to load notifications: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+        print("Failed to load notifications: $e");
+      }
     }
+  }
+
+  void _markAllAsRead() {
+    setState(() {
+      _notifications = _notifications.map((n) => AppNotification(
+        notificationId: n.notificationId,
+        userId: n.userId,
+        message: n.message,
+        createdAt: n.createdAt,
+        isRead: true,
+      )).toList();
+    });
+    widget.onNotificationsUpdated?.call(_notifications);
   }
 
   String _formatTime(String timestamp) {
@@ -68,17 +91,7 @@ class _NotificationPopupState extends State<NotificationPopup> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _notifications = _notifications.map((n) => AppNotification(
-                        notificationId: n.notificationId,
-                        userId: n.userId,
-                        message: n.message,
-                        createdAt: n.createdAt,
-                        isRead: true,
-                      )).toList();
-                    });
-                  },
+                  onPressed: _markAllAsRead,
                   child: const Text(
                     "Mark All as Read",
                     style: TextStyle(fontSize: 12),
@@ -113,6 +126,18 @@ class _NotificationPopupState extends State<NotificationPopup> {
                                 _formatTime(notif.createdAt),
                                 style: const TextStyle(fontSize: 10, color: Colors.grey),
                               ),
+                              onTap: () {
+                                setState(() {
+                                  _notifications[index] = AppNotification(
+                                    notificationId: notif.notificationId,
+                                    userId: notif.userId,
+                                    message: notif.message,
+                                    createdAt: notif.createdAt,
+                                    isRead: true,
+                                  );
+                                });
+                                widget.onNotificationsUpdated?.call(_notifications);
+                              },
                             );
                           },
                         ),

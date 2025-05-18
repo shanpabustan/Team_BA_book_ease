@@ -1,9 +1,9 @@
 import 'package:book_ease/screens/admin/components/reuse_dash_card.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../mock_data/bargraph_data.dart';
 import 'package:intl/intl.dart';
-import 'dashboard_screen.dart'; // For DashboardTheme
+import 'dashboard_screen.dart';
+import 'package:book_ease/services/analytics_service.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   @override
@@ -13,6 +13,27 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String selectedMonth = DateFormat('MMMM').format(DateTime.now());
   String selectedYear = DateTime.now().year.toString();
+  final AnalyticsService _analyticsService = AnalyticsService();
+  List<CategoryStats> _categoryStats = [];
+  bool _isLoading = false;
+  String? _error;
+
+  // List of colors for different categories
+  final List<Color> categoryColors = [
+    Colors.blue,
+    Colors.green,
+    Colors.red,
+    Colors.purple,
+    Colors.orange,
+    Colors.teal,
+    Colors.pink,
+    Colors.amber,
+    Colors.indigo,
+    Colors.cyan,
+    Colors.deepOrange,
+    Colors.lightBlue,
+    // Add more colors if needed
+  ];
 
   final List<String> months = [
     'January',
@@ -35,6 +56,36 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _fetchCategoryStats();
+  }
+
+  Future<void> _fetchCategoryStats() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final monthNumber = (months.indexOf(selectedMonth) + 1).toString();
+      final stats = await _analyticsService.getMostBorrowedCategories(
+        monthNumber,
+        selectedYear,
+      );
+      setState(() {
+        _categoryStats = stats;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'There is no data for this month';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -48,7 +99,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header with title and dropdowns
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -65,77 +115,36 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           SizedBox(width: 16),
                           SizedBox(
                             height: 40,
-                            child: _buildDropdown(selectedMonth, months,
-                                (newValue) {
-                              setState(() => selectedMonth = newValue!);
-                            }),
+                            child: _buildDropdown(
+                              selectedMonth,
+                              months,
+                              (newValue) {
+                                setState(() => selectedMonth = newValue!);
+                                _fetchCategoryStats();
+                              },
+                            ),
                           ),
                           SizedBox(width: 12),
                           SizedBox(
                             height: 40,
-                            child:
-                                _buildDropdown(selectedYear, years, (newValue) {
-                              setState(() => selectedYear = newValue!);
-                            }),
+                            child: _buildDropdown(
+                              selectedYear,
+                              years,
+                              (newValue) {
+                                setState(() => selectedYear = newValue!);
+                                _fetchCategoryStats();
+                              },
+                            ),
                           ),
                         ],
                       ),
                       SizedBox(height: 16),
                       Expanded(
-                        child: BarChart(
-                          BarChartData(
-                            maxY: 1000,
-                            barTouchData: BarTouchData(enabled: true),
-                            alignment: BarChartAlignment.spaceAround,
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 35,
-                                  getTitlesWidget: (value, meta) => Text(
-                                    value.toInt().toString(),
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  getTitlesWidget: (value, meta) {
-                                    if (value.toInt() >= 0 &&
-                                        value.toInt() <
-                                            TopBookCategoryBorrowData
-                                                .categoryLabels.length) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          TopBookCategoryBorrowData
-                                              .categoryLabels[value.toInt()],
-                                          style: TextStyle(fontSize: 10),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      );
-                                    }
-                                    return SizedBox.shrink();
-                                  },
-                                ),
-                              ),
-                            ),
-                            gridData: FlGridData(show: true),
-                            borderData: FlBorderData(show: false),
-                            barGroups:
-                                TopBookCategoryBorrowData.getCategoryData(
-                              selectedMonth,
-                              selectedYear,
-                            ).map((group) {
-                              return BarChartGroupData(
-                                x: group.x,
-                                barRods: group.barRods,
-                                barsSpace: 6,
-                              );
-                            }).toList(),
-                          ),
-                        ),
+                        child: _isLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : _error != null
+                                ? Center(child: Text(_error!))
+                                : _buildBarChart(),
                       ),
                     ],
                   ),
@@ -144,6 +153,83 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBarChart() {
+    if (_categoryStats.isEmpty) {
+      return Center(child: Text('No data available'));
+    }
+
+    final maxY = _categoryStats.map((s) => s.borrowCount).reduce((a, b) => a > b ? a : b).toDouble();
+
+    return BarChart(
+      BarChartData(
+        maxY: maxY * 1.2,
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            tooltipRoundedRadius: 8,
+            tooltipPadding: const EdgeInsets.all(8),
+            tooltipMargin: 8,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              return BarTooltipItem(
+                '${_categoryStats[group.x].category}\n${rod.toY.round()} borrows',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
+          ),
+        ),
+        alignment: BarChartAlignment.spaceAround,
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 35,
+              getTitlesWidget: (value, meta) => Text(
+                value.toInt().toString(),
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() >= 0 && value.toInt() < _categoryStats.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _categoryStats[value.toInt()].category,
+                      style: TextStyle(fontSize: 10),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+        gridData: FlGridData(show: true),
+        borderData: FlBorderData(show: false),
+        barGroups: _categoryStats.asMap().entries.map((entry) {
+          return BarChartGroupData(
+            x: entry.key,
+            barRods: [
+              BarChartRodData(
+                toY: entry.value.borrowCount.toDouble(),
+                color: categoryColors[entry.key % categoryColors.length],
+                width: 20,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

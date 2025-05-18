@@ -79,7 +79,9 @@ class UnblockDataModal extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   OutlinedButton(
-                    onPressed: onCancel,
+                    onPressed: () {
+                      Navigator.pop(context); // ✨ Back to the previous screen
+                    },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFF1C0E4B)),
                       shape: RoundedRectangleBorder(
@@ -101,7 +103,8 @@ class UnblockDataModal extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       onUnblock(); // Call the unblock function passed from parent
-                      Navigator.pop(context); // Close the modal after unblock action
+                      Navigator.pop(
+                          context); // Close the modal after unblock action
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:

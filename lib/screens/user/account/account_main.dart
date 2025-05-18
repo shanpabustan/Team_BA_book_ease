@@ -1,9 +1,14 @@
+import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:book_ease/screens/auth/login.dart';
+import 'package:book_ease/screens/user/account/change_password.dart';
+import 'package:book_ease/screens/user/account/library_policy.dart';
+import 'package:book_ease/screens/user/app_text_styles.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/navigator_helper.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:book_ease/screens/auth/change-password.dart';
 import 'package:book_ease/screens/user/account/personal_view.dart';
 import 'package:book_ease/data/personal_data.dart';
 import 'package:provider/provider.dart';
@@ -12,8 +17,6 @@ import 'package:book_ease/provider/book_provider.dart';
 import 'package:book_ease/main.dart';
 import 'package:book_ease/modals/logout_modal.dart';
 import 'package:book_ease/base_url.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -34,8 +37,6 @@ class _AccountScreenState extends State<AccountScreen> {
     'assets/icons/girl-2.png',
     'assets/icons/reading_book.png',
     'assets/icons/student-boy.png',
-    'assets/images/bini.jpg',
-    'assets/images/pulgoso.jpg',
   ];
 
   Future<Map<String, dynamic>> _loadPersonalInfo() async {
@@ -62,15 +63,19 @@ class _AccountScreenState extends State<AccountScreen> {
           _profileImage = null;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Avatar updated successfully!")),
+        showSuccessSnackBar(
+          context,
+          title: 'Success!',
+          message: 'Avatar updated successfully!',
         );
       } else {
         throw Exception("Failed to update avatar");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error updating avatar: $e")),
+      showErrorSnackBar(
+        context,
+        title: 'Error!',
+        message: 'Error updating avatar: $e',
       );
     }
   }
@@ -86,14 +91,8 @@ class _AccountScreenState extends State<AccountScreen> {
         "${userData.firstName} ${userData.middleName.isNotEmpty ? userData.middleName + " " : ""}${userData.lastName}${userData.suffix.isNotEmpty ? " " + userData.suffix : ""}";
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          "My Account",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
         centerTitle: true,
         backgroundColor: secondaryColor,
         elevation: 0,
@@ -120,6 +119,16 @@ class _AccountScreenState extends State<AccountScreen> {
                         height: screenHeight * 0.15,
                       ),
                       Positioned(
+                        top: screenHeight * 0.03,
+                        child: Text(
+                          "My Account",
+                          style: AppTextStyles.appBarTitle.copyWith(
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                      Positioned(
                         top: screenHeight * 0.07,
                         child: Stack(
                           alignment: Alignment.bottomRight,
@@ -138,10 +147,12 @@ class _AccountScreenState extends State<AccountScreen> {
                                 backgroundImage: _profileImage != null
                                     ? FileImage(_profileImage!)
                                     : (_selectedAvatarPath != null
-                                        ? AssetImage(_selectedAvatarPath!)
-                                        : AssetImage(userData.avatarPath.isNotEmpty
-                                            ? userData.avatarPath
-                                            : 'assets/icons/boy-icon.png')) as ImageProvider,
+                                            ? AssetImage(_selectedAvatarPath!)
+                                            : AssetImage(userData
+                                                    .avatarPath.isNotEmpty
+                                                ? userData.avatarPath
+                                                : 'assets/icons/boy-icon.png'))
+                                        as ImageProvider,
                               ),
                             ),
                           ],
@@ -189,8 +200,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                       },
                                       child: CircleAvatar(
                                         radius: 40,
-                                        backgroundImage:
-                                            AssetImage(avatarPath),
+                                        backgroundImage: AssetImage(avatarPath),
                                         backgroundColor: Colors.grey[200],
                                       ),
                                     );
@@ -244,25 +254,21 @@ class _AccountScreenState extends State<AccountScreen> {
             Icons.person,
             'Personal Information',
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PersonalInfoScreen(),
-                ),
-              );
+              fadePush(context, const PersonalInfoScreen());
             },
           ),
-          _buildProfileOption(Icons.book, 'Borrowing Details'),
+          _buildProfileOption(
+            Icons.policy,
+            'Library Policy',
+            onTap: () {
+              fadePush(context, const LibraryPolicyScreen());
+            },
+          ),
           _buildProfileOption(
             Icons.lock,
             'Change Password',
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreatePasswordScreen(),
-                ),
-              );
+              fadePush(context, const CreatePasswordScreen());
             },
           ),
           _buildProfileOption(
@@ -272,8 +278,9 @@ class _AccountScreenState extends State<AccountScreen> {
             onTap: () {
               // Get the providers before showing the dialog
               final userData = Provider.of<UserData>(context, listen: false);
-              final bookProvider = Provider.of<BookProvider>(context, listen: false);
-              
+              final bookProvider =
+                  Provider.of<BookProvider>(context, listen: false);
+
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
@@ -295,7 +302,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                         );
 
-                        if (response.statusCode == 200 && response.data['retCode'] == '200') {
+                        if (response.statusCode == 200 &&
+                            response.data['retCode'] == '200') {
                           // Use the providers we got before showing the dialog
                           userData.logout(); // clears user info + SharedPrefs
                           bookProvider.clearBooks();
@@ -303,12 +311,15 @@ class _AccountScreenState extends State<AccountScreen> {
                           // Redirect to login screen
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => const LogBookEaseApp()),
+                            MaterialPageRoute(
+                                builder: (context) => const LogBookEaseApp()),
                             (route) => false,
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Logout failed. Please try again.')),
+                            const SnackBar(
+                                content:
+                                    Text('Logout failed. Please try again.')),
                           );
                         }
                       } catch (e) {
@@ -320,6 +331,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   );
                 },
               );
+              
             },
           ),
         ],
@@ -329,22 +341,21 @@ class _AccountScreenState extends State<AccountScreen> {
 }
 
 Widget _buildProfileOption(IconData icon, String title,
-      {bool isLogout = false, VoidCallback? onTap}) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: ListTile(
-        leading: Icon(icon, color: isLogout ? Colors.red : Colors.teal),
-        title: Text(
-          title,
-          style: const TextStyle(fontFamily: 'Poppins'),
-        ),
-        trailing:
-            isLogout ? null : const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    {bool isLogout = false, VoidCallback? onTap}) {
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    elevation: 0,
+    color: AdminColor.lightGreenBackground,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    child: ListTile(
+      leading: Icon(icon, color: isLogout ? Colors.red : Colors.teal),
+      title: Text(
+        title,
+        style: const TextStyle(fontFamily: 'Poppins'),
       ),
-    );
-  }
+      trailing: isLogout ? null : const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    ),
+  );
+}

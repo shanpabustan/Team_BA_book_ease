@@ -1,4 +1,3 @@
-
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_books_data.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -7,7 +6,6 @@ import 'package:book_ease/screens/admin/barrowed_books/barrowed_return_controlle
 import 'package:book_ease/widgets/admin_small_button_widget.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:intl/intl.dart';
-
 
 class ReturnBookModal extends StatefulWidget {
   final BorrowedBookAdmin returnData;
@@ -21,7 +19,7 @@ class ReturnBookModal extends StatefulWidget {
 class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController {
   final _formKey = GlobalKey<FormState>();
   bool isReturning = false;
-
+  DateTime? selectedReturnDate;
 
   @override
   void initState() {
@@ -70,8 +68,13 @@ class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController
                         : 'N/A',
                   ),
 
-
-                  buildDatePickerField(context),
+                  // Automatically handled return date — display only
+                  buildReadOnlyField(
+                    'Return Date',
+                    selectedReturnDate != null
+                        ? DateFormat('MM-dd-yy hh:mm a').format(selectedReturnDate!)
+                        : 'Will be set upon return',
+                  ),
 
                   buildReadOnlyField('Book Condition (Before)', widget.returnData.conditionBefore ?? 'N/A'),
                   buildConditionDropdown(),
@@ -96,9 +99,12 @@ class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController
                         text: 'Returned',
                         onPressed: () async {
                           if (_formKey.currentState!.validate() &&
-                              selectedReturnDate != null &&
                               selectedCondition != null) {
                             
+                            setState(() {
+                              selectedReturnDate = DateTime.now(); // Set actual return time
+                            });
+
                             try {
                               final borrowId = widget.returnData.borrowID;
                               final response = await Dio().put(
@@ -106,6 +112,7 @@ class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController
                                 data: {
                                   "book_condition_after": selectedCondition,
                                   "penalty_amount": double.tryParse(penaltyController.text) ?? 0.0,
+                                  "return_date": selectedReturnDate!.toIso8601String(),
                                 },
                               );
 

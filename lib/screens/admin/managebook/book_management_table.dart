@@ -11,6 +11,7 @@ import 'package:book_ease/screens/admin/components/search_admin.dart';
 import 'package:book_ease/screens/admin/components/table_controller.dart';
 import 'package:book_ease/screens/admin/components/paginated_table.dart';
 import 'package:book_ease/widgets/admin_buttons_widget.dart';
+import 'package:book_ease/services/export_service.dart';
 
 class BookManagementApp extends StatelessWidget {
   const BookManagementApp({super.key});
@@ -118,11 +119,27 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
       children: [
         ActionButtonRow(
           isButtonEnabled: controller.isButtonEnabled,
-          onPdfPressed: () {
-            // TODO: Export to PDF
+          onPdfPressed: () async {
+            final selectedBooks = _getSelectedBooks();
+            if (selectedBooks.isEmpty) return;
+
+            await ExportService.exportToPdf(
+              title: 'Books Report',
+              headers: ['Book ID', 'Title', 'Author', 'Year', 'Category', 'Condition', 'Copies'],
+              data: ExportService.formatBookData(selectedBooks),
+              fileName: 'books_report',
+            );
           },
-          onExcelPressed: () {
-            // TODO: Export to Excel
+          onExcelPressed: () async {
+            final selectedBooks = _getSelectedBooks();
+            if (selectedBooks.isEmpty) return;
+
+            await ExportService.exportToExcel(
+              title: 'Books',
+              headers: ['Book ID', 'Title', 'Author', 'Year', 'Category', 'Condition', 'Copies'],
+              data: ExportService.formatBookData(selectedBooks),
+              fileName: 'books_report',
+            );
           },
         ),
         const Spacer(),
@@ -156,6 +173,16 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
         ),
       ],
     );
+  }
+
+  List<Map<String, String>> _getSelectedBooks() {
+    List<Map<String, String>> selectedBooks = [];
+    for (int i = 0; i < controller.selectedRows.length; i++) {
+      if (controller.selectedRows[i]) {
+        selectedBooks.add(controller.dataList[i]);
+      }
+    }
+    return selectedBooks;
   }
 
   Widget _buildBookTable() {

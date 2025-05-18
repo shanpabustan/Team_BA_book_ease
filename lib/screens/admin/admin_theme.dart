@@ -22,6 +22,9 @@ class AdminColor {
   // Border Colors
   static const Color borderColor =
       Color.fromRGBO(220, 220, 220, 1); // Light gray border
+
+  static const Color lightGreenBackground =
+      Color(0xFFF2FAF9); // Soft light green
 }
 
 class AdminFontSize {

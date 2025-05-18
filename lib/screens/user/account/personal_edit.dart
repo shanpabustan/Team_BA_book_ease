@@ -1,9 +1,12 @@
+import 'package:book_ease/screens/user/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/user_data.dart';
 import 'package:dio/dio.dart';
 import 'package:book_ease/base_url.dart';
+import 'package:book_ease/screens/admin/admin_theme.dart';
+
 class PersonalInfoEditScreen extends StatefulWidget {
   const PersonalInfoEditScreen({super.key});
 
@@ -27,17 +30,21 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
   String? _selectedCourse;
   String? _selectedYearLevel;
 
- final List<String> _courses = [
+  final List<String> _courses = [
     'BS Computer Science',
     'BS Information Technology',
     'BS Business Administration',
     'BS Engineering',
     'BS Education',
   ];
-  final List<String> _yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+  final List<String> _yearLevels = [
+    '1st Year',
+    '2nd Year',
+    '3rd Year',
+    '4th Year'
+  ];
 
-
-   @override
+  @override
   void initState() {
     super.initState();
     final userData = Provider.of<UserData>(context, listen: false);
@@ -65,7 +72,6 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
     super.dispose();
   }
 
-  
   Future<void> _saveChanges() async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -76,7 +82,8 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
             "first_name": _firstNameController.text,
             "last_name": _lastNameController.text,
             "middle_name": _middleNameController.text,
-            "suffix": _suffixController.text.isEmpty ? "" : _suffixController.text,
+            "suffix":
+                _suffixController.text.isEmpty ? "" : _suffixController.text,
             "contact_number": _phoneController.text,
             "program": _selectedCourse,
             "year_level": _selectedYearLevel,
@@ -112,16 +119,16 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Edit Personal Information",
-          style: TextStyle(
+          style: AppTextStyles.appBarTitle.copyWith(
             color: Colors.white,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins', // Optional if you want to enforce Poppins
           ),
         ),
-        backgroundColor: Colors.teal,
+        backgroundColor: AdminColor.secondaryBackgroundColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -142,10 +149,19 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Expanded(child: _buildTextField("Middle Name", _middleNameController)),
+                      Expanded(
+                          child: _buildTextField(
+                              "Middle Name", _middleNameController)),
                       const SizedBox(width: 10),
-                      SizedBox(width: 80, child: _buildTextField("Suffix", _suffixController, 
-                      validator: (value) => _validateField(value, "Suffix", required: false),)),
+                      SizedBox(
+                          width: 80,
+                          child: _buildTextField(
+                            "Suffix",
+                            _suffixController,
+                            validator: (value) => _validateField(
+                                value, "Suffix",
+                                required: false),
+                          )),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -199,7 +215,8 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle: const TextStyle(color: Colors.teal),
+        floatingLabelStyle:
+            const TextStyle(color: AdminColor.secondaryBackgroundColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         filled: true,
         fillColor: Colors.grey[200], // Grey background to indicate disabled
@@ -227,10 +244,12 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle: const TextStyle(color: Colors.teal),
+        floatingLabelStyle:
+            const TextStyle(color: AdminColor.secondaryBackgroundColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
+          borderSide: const BorderSide(
+              color: AdminColor.secondaryBackgroundColor, width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
@@ -252,20 +271,22 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle: const TextStyle(color: Colors.teal),
+        floatingLabelStyle:
+            const TextStyle(color: AdminColor.secondaryBackgroundColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.teal, width: 2),
+          borderSide: const BorderSide(
+              color: AdminColor.secondaryBackgroundColor, width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
       onChanged: onChanged,
       dropdownColor: Colors.white,
     );
   }
-
-
 
   // Save Button
   Widget _saveButton() {
@@ -274,24 +295,27 @@ class _PersonalInfoEditScreenState extends State<PersonalInfoEditScreen> {
       child: ElevatedButton(
         onPressed: _saveChanges,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.teal,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: AdminColor.secondaryBackgroundColor,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         child: const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
-          child: Text("Save Changes", style: TextStyle(fontSize: 16, color: Colors.white)),
+          child: Text("Save Changes",
+              style: TextStyle(fontSize: 16, color: Colors.white)),
         ),
       ),
     );
   }
 
   // Field Validation
-  String? _validateField(String? value, String fieldName, {bool required = true}) {
-  if (required && (value == null || value.isEmpty)) {
-    return '$fieldName is required';
+  String? _validateField(String? value, String fieldName,
+      {bool required = true}) {
+    if (required && (value == null || value.isEmpty)) {
+      return '$fieldName is required';
+    }
+    return null;
   }
-  return null;
-}
 
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) return 'Phone number is required';

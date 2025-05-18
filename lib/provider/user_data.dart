@@ -1,17 +1,16 @@
-import 'dart:convert';
 import 'package:book_ease/provider/book_data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Define a BorrowedBook model
-class BorrowedBook {
+// Define a UserBorrowedBook model
+class UserBorrowedBook {
   final int reservationID;
   final String userID;
   final Book book;
   final DateTime borrowDate;
   final DateTime dueDate;
 
-  BorrowedBook({
+  UserBorrowedBook({
     required this.reservationID,
     required this.userID,
     required this.book,
@@ -27,7 +26,7 @@ class BorrowedBook {
         'dueDate': dueDate.toIso8601String(),
       };
 
-  factory BorrowedBook.fromJson(Map<String, dynamic> json) => BorrowedBook(
+  factory UserBorrowedBook.fromJson(Map<String, dynamic> json) => UserBorrowedBook(
         reservationID: json['reservationID'],
         userID: json['userID'],
         book: Book.fromJson(json['book']),

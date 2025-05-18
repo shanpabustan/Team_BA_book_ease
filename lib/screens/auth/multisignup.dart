@@ -1,11 +1,13 @@
 import 'package:book_ease/base_url.dart';
 import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:book_ease/utils/info_snack_bar.dart';
+import 'package:book_ease/utils/navigator_helper.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:book_ease/screens/auth/login.dart';
 import 'package:dio/dio.dart';
+import 'package:book_ease/screens/admin/admin_theme.dart';
 
 class MultiStepSignUpScreen extends StatefulWidget {
   const MultiStepSignUpScreen({super.key});
@@ -208,18 +210,12 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
                     const Text("Already have an account? "),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const LoginScreen(), // ✅ Navigates to Login Page
-                          ),
-                        );
+                        fadePush(context, const LoginScreen());
                       },
                       child: const Text(
                         "Sign In",
                         style: TextStyle(
-                          color: Colors.teal,
+                          color: AdminColor.secondaryBackgroundColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -244,8 +240,9 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
         children: [
           const SizedBox(height: 30),
           _backButton(),
-          Image.asset('assets/images/logo-removebg-preview.png',
-              width: 250, height: 250),
+          const SizedBox(height: 40),
+          Image.asset('assets/images/admin_logo_green.png',
+              width: 150, height: 150),
           const SizedBox(height: 5),
           const SizedBox(height: 5),
           _buildTextField("Lastname", _lastNameController, _validateName),
@@ -297,8 +294,8 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
         children: [
           const SizedBox(height: 30),
           _backButton(),
-          Image.asset('assets/images/logo-removebg-preview.png',
-              width: 250, height: 250),
+          Image.asset('assets/images/admin_logo_green.png',
+              width: 150, height: 150),
           const SizedBox(height: 5),
           _buildTextField(
               "Student ID", _studentIdController, _validateStudentId,
@@ -349,7 +346,7 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
       child: ElevatedButton(
         onPressed: _nextStep,
         style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.teal,
+            backgroundColor: AdminColor.secondaryBackgroundColor,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10))),
         child: Padding(
@@ -372,10 +369,12 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle: const TextStyle(color: Colors.teal),
+        floatingLabelStyle:
+            const TextStyle(color: AdminColor.secondaryBackgroundColor),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.teal, width: 2),
+            borderSide: const BorderSide(
+                color: AdminColor.secondaryBackgroundColor, width: 2),
             borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -395,18 +394,21 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle:
-            const TextStyle(color: Colors.teal), // Floating label turns teal
+        floatingLabelStyle: const TextStyle(
+            color: AdminColor
+                .secondaryBackgroundColor), // Floating label turns teal
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(
-              color: Colors.teal, width: 2), // ✅ Teal border when focused
+              color: AdminColor.secondaryBackgroundColor,
+              width: 2), // ✅ Teal border when focused
           borderRadius: BorderRadius.circular(10),
         ),
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
-            color: Colors.teal, // ✅ Teal icon for consistency
+            color: AdminColor
+                .secondaryBackgroundColor, // ✅ Teal icon for consistency
           ),
           onPressed: onToggle,
         ),
@@ -423,12 +425,14 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.grey),
-        floatingLabelStyle:
-            const TextStyle(color: Colors.teal), // Floating label turns teal
+        floatingLabelStyle: const TextStyle(
+            color: AdminColor
+                .secondaryBackgroundColor), // Floating label turns teal
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(
-              color: Colors.teal, width: 2), // ✅ Teal border when focused
+              color: AdminColor.secondaryBackgroundColor,
+              width: 2), // ✅ Teal border when focused
           borderRadius: BorderRadius.circular(10),
         ),
       ),

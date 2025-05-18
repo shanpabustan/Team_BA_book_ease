@@ -72,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Stack(
       children: [
         Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBarWidget(
             onNotificationPressed: _toggleNotificationOverlay,
             unreadCount: _notifications.where((n) => !n.isRead).length,

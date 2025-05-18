@@ -61,31 +61,31 @@ class AddBookFormContent extends StatefulWidget {
   _AddBookFormContentState createState() => _AddBookFormContentState();
 }
 
-class _AddBookFormContentState extends State<AddBookFormContent> {
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Scaffold(
-            body: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header / AppBar Style
-                _buildHeader(context),
+  class _AddBookFormContentState extends State<AddBookFormContent> {
+    @override
+    Widget build(BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Scaffold(
+              body: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header / AppBar Style
+                  _buildHeader(context),
 
-                // Scrollable Content
-                _buildFormContent(context),
-              ],
+                  // Scrollable Content
+                  _buildFormContent(context),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   Widget _buildHeader(BuildContext context) {
     return Container(

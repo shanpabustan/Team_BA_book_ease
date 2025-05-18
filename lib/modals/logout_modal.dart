@@ -65,7 +65,7 @@ class LogoutModal extends StatelessWidget {
                   const Expanded(
                     child: Text(
                       'Are you sure you want to log out? You will need to sign in again to access your account.',
-                      style: TextStyle(fontSize: 14,color: Colors.black),
+                      style: TextStyle(fontSize: 14, color: Colors.black),
                     ),
                   ),
                 ],
@@ -76,19 +76,18 @@ class LogoutModal extends StatelessWidget {
 
               // Buttons
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton(
-                    onPressed: onCancel,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF1C0E4B)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: onCancel,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF1C0E4B)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
+                      child: const Text(
                         'Cancel',
                         style: TextStyle(
                           color: Color(0xFF1C0E4B),
@@ -98,19 +97,17 @@ class LogoutModal extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      onLogout(); // Perform logout logic
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onLogout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
+                      child: const Text(
                         'Logout',
                         style: TextStyle(
                           fontWeight: FontWeight.w500,

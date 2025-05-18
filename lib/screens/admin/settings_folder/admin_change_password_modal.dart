@@ -3,6 +3,13 @@ import 'package:book_ease/widgets/admin_password_field_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:book_ease/widgets/admin_small_button_widget.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
+import 'package:dio/dio.dart';
+import 'package:book_ease/base_url.dart';
+import 'package:provider/provider.dart';
+import 'package:book_ease/provider/user_data.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/warning_snack_bar.dart';
 
 class PasswordChangeForm extends StatefulWidget {
   final bool isModal;
@@ -20,6 +27,8 @@ class PasswordChangeForm extends StatefulWidget {
 
 class _PasswordChangeFormState extends State<PasswordChangeForm> {
   final _formKey = GlobalKey<FormState>();
+  final _dio = Dio();
+  bool _isLoading = false;
 
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -53,6 +62,70 @@ class _PasswordChangeFormState extends State<PasswordChangeForm> {
       _hasMinLength &&
       _newPasswordController.text == _confirmPasswordController.text &&
       _newPasswordController.text != _currentPasswordController.text;
+
+  Future<void> _changePassword() async {
+    if (!_isPasswordValid) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final userId = context.read<UserData>().userID;
+      final response = await _dio.post(
+        '${ApiConfig.baseUrl}/change-password',
+        data: {
+          'user_id': userId,
+          'current_password': _currentPasswordController.text,
+          'new_password': _newPasswordController.text,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data['retCode'] == '200') {
+          showSuccessSnackBar(
+            context,
+            title: 'Success!',
+            message: 'Password updated successfully',
+          );
+          Navigator.pop(context, {'success': true});
+        } else {
+          showWarningSnackBar(
+            context,
+            title: 'Update Failed',
+            message: response.data['message'] ?? 'Failed to update password',
+          );
+        }
+      }
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data['message'] ?? e.message ?? 'An error occurred';
+      if (e.response?.statusCode == 401) {
+        showWarningSnackBar(
+          context,
+          title: 'Authentication Error',
+          message: errorMessage,
+        );
+      } else if (e.response?.statusCode == 404) {
+        showWarningSnackBar(
+          context,
+          title: 'User Not Found',
+          message: errorMessage,
+        );
+      } else {
+        showErrorSnackBar(
+          context,
+          title: 'Error',
+          message: errorMessage,
+        );
+      }
+    } catch (e) {
+      showErrorSnackBar(
+        context,
+        title: 'Error',
+        message: 'An unexpected error occurred',
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,20 +229,8 @@ class _PasswordChangeFormState extends State<PasswordChangeForm> {
                   ),
                 const SizedBox(width: 12),
                 CustomSmallButton(
-                  text: 'Apply Changes',
-                  onPressed: _isPasswordValid
-                      ? () {
-                          if (widget.onSubmit != null) {
-                            widget.onSubmit!(
-                              _currentPasswordController.text,
-                              _newPasswordController.text,
-                            );
-                          }
-                          Navigator.pop(context, {
-                            'success': true,
-                          });
-                        }
-                      : () {},
+                  text: _isLoading ? 'Updating...' : 'Apply Changes',
+                  onPressed: _isPasswordValid && !_isLoading ? () => _changePassword() : () {},
                   backgroundColor: AdminColor.secondaryBackgroundColor,
                   textColor: Colors.white,
                   borderColor: AdminColor.secondaryBackgroundColor,

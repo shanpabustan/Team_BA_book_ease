@@ -15,8 +15,7 @@ class AccountSecurityCard extends StatefulWidget {
 }
 
 class _AccountSecurityCardState extends State<AccountSecurityCard> {
-  DateTime _lastPasswordChange = DateTime.now()
-      .subtract(const Duration(days: 60)); // Default to 2 months ago
+  DateTime? _lastPasswordChange;
   late Timer _timer;
 
   @override
@@ -26,8 +25,10 @@ class _AccountSecurityCardState extends State<AccountSecurityCard> {
     // Start a timer to refresh the time every minute
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       setState(() {
-        // Explicitly update the last password change time
-        _lastPasswordChange = _lastPasswordChange;
+        // Only update if we have a value
+        if (_lastPasswordChange != null) {
+          _lastPasswordChange = _lastPasswordChange;
+        }
       });
     });
   }
@@ -37,18 +38,21 @@ class _AccountSecurityCardState extends State<AccountSecurityCard> {
     final prefs = await SharedPreferences.getInstance();
     final lastChanged = prefs.getString('lastPasswordChange');
 
-    if (lastChanged != null) {
-      setState(() {
+    setState(() {
+      if (lastChanged != null) {
         _lastPasswordChange = DateTime.parse(lastChanged);
-      });
-    }
+      } else {
+        // Only set default if no saved value exists
+        _lastPasswordChange = DateTime.now().subtract(const Duration(days: 60));
+      }
+    });
   }
 
   // Save the last password change time to shared_preferences
   Future<void> _saveLastPasswordChange() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        'lastPasswordChange', _lastPasswordChange.toIso8601String());
+        'lastPasswordChange', _lastPasswordChange!.toIso8601String());
   }
 
   // This function calculates the time difference from the current time to the last password change time
@@ -81,6 +85,11 @@ class _AccountSecurityCardState extends State<AccountSecurityCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator while _lastPasswordChange is null
+    if (_lastPasswordChange == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return SettingsCard(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -98,7 +107,7 @@ class _AccountSecurityCardState extends State<AccountSecurityCard> {
             ),
             const SizedBox(height: 4),
             Text(
-              "Last changed: ${getTimeAgo(_lastPasswordChange)}", // Dynamic time ago
+              "Last changed: ${getTimeAgo(_lastPasswordChange!)}", // Note the ! operator since we checked for null
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 12),
