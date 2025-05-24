@@ -78,6 +78,7 @@ flutter:
     - assets/icons/error.svg
     - assets/icons/email-send-password.png
     - assets/icons/change_password.png
+    - assets/icons/email-verification.png
 
   # flutter:
   fonts:

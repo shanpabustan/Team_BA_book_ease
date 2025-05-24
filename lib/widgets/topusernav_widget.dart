@@ -9,11 +9,13 @@ import 'package:book_ease/main.dart';
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onNotificationPressed;
   final int unreadCount;
+  final String userId;
 
   const AppBarWidget({
     super.key,
     required this.onNotificationPressed,
     required this.unreadCount,
+    required this.userId,
   });
 
   @override
@@ -114,7 +116,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
             child: IconButton(
               icon: const Icon(Icons.favorite, color: Colors.white, size: 20),
               onPressed: () {
-                fadePush(context, const FavouriteBooksScreen());
+                fadePush(context, FavouriteBooksScreen(userId: userId));
               },
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

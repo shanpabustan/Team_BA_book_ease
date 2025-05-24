@@ -136,6 +136,26 @@ class UserData with ChangeNotifier {
   }
 
   void logout() async {
+    // Store the current user ID before clearing
+    final prefs = await SharedPreferences.getInstance();
+    final currentUserId = prefs.getString('current_user_id');
+
+    // Clear only session-related data
+    await prefs.remove('isLoggedIn');
+    await prefs.remove('userID');
+    await prefs.remove('userType');
+    await prefs.remove('lastName');
+    await prefs.remove('firstName');
+    await prefs.remove('middleName');
+    await prefs.remove('suffix');
+    await prefs.remove('email');
+    await prefs.remove('program');
+    await prefs.remove('yearLevel');
+    await prefs.remove('contactNumber');
+    await prefs.remove('avatarPath');
+    await prefs.remove('current_user_id');
+
+    // Reset the in-memory data
     _userID = '';
     _userType = '';
     _lastName = '';
@@ -148,9 +168,6 @@ class UserData with ChangeNotifier {
     _contactNumber = '';
     _avatarPath = '';
     _isLoggedIn = false;
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
 
     notifyListeners();
   }

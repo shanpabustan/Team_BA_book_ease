@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/book_provider.dart';
 import 'package:book_ease/screens/user/library/book_tile.dart';
+import 'package:book_ease/provider/book_data.dart';
 
 class BookGrid extends StatelessWidget {
   final String userId;
@@ -59,13 +60,18 @@ class BookGrid extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         final book = books[index];
-        return GestureDetector(
-          onTap: () => showBookDetailsModal(
-            context: context,
-            book: book,
-            userId: userId,
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              showBookDetailsModal(
+                context: context,
+                book: book,
+                userId: userId,
+              );
+            },
+            child: BookItem(book: book),
           ),
-          child: BookItem(book: book),
         );
       },
     );

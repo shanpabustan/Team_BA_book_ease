@@ -83,6 +83,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           appBar: AppBarWidget(
             onNotificationPressed: _toggleNotificationOverlay,
             unreadCount: _notifications.where((n) => !n.isRead).length,
+            userId: userId,
           ),
           body: Container(
             color: Colors.white,

@@ -72,7 +72,22 @@ class Book {
     );
   }
 
-  toJson() {}
+  Map<String, dynamic> toJson() {
+    return {
+      'book_id': bookId,
+      'title': title,
+      'author': author,
+      'copies': copies,
+      'year': year,
+      'description': description,
+      'image': image,
+      'isbn': isbn,
+      'shelfLocation': shelfLocation,
+      'librarySection': librarySection,
+      'category': category,
+      'reserveCount': reserveCount,
+    };
+  }
 }
 
 class BorrowedBook {

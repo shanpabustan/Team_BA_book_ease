@@ -1,68 +1,20 @@
-import 'package:book_ease/screens/admin/admin_theme.dart';
-import 'package:book_ease/screens/auth/login.dart';
-import 'package:book_ease/screens/auth/verify_reset_code.dart';
-import 'package:book_ease/services/password_reset_service.dart';
-import 'package:book_ease/utils/navigator_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:book_ease/screens/admin/admin_theme.dart';
+import 'package:book_ease/screens/auth/new_password.dart';
+import 'package:book_ease/utils/navigator_helper.dart';
 
-void main() => runApp(EmailForgotPassword());
+class VerifyResetCodeScreen extends StatefulWidget {
+  final String email;
 
-class EmailForgotPassword extends StatelessWidget {
+  const VerifyResetCodeScreen({Key? key, required this.email}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Forgot Password',
-      home: ForgotPasswordScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  _VerifyResetCodeScreenState createState() => _VerifyResetCodeScreenState();
 }
 
-class ForgotPasswordScreen extends StatefulWidget {
-  @override
-  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
-}
-
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final TextEditingController emailController = TextEditingController();
+class _VerifyResetCodeScreenState extends State<VerifyResetCodeScreen> {
+  final TextEditingController codeController = TextEditingController();
   bool isLoading = false;
-
-  Future<void> _requestPasswordReset() async {
-    if (emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email')),
-      );
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      final response = await PasswordResetService.requestPasswordReset(
-        emailController.text,
-      );
-
-      if (response['retCode'] == '200') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reset code sent to your email')),
-        );
-        fadePush(
-          context,
-          VerifyResetCodeScreen(email: emailController.text),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? 'Failed to send reset code')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred')),
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,19 +24,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 450,
-            ),
+            constraints: const BoxConstraints(maxWidth: 450),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'assets/icons/email-send-password.png',
+                  'assets/icons/email-verification.png',
                   height: 150,
                 ),
                 const SizedBox(height: 30),
                 const Text(
-                  'Forgot your password?',
+                  'Enter Verification Code',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -93,7 +43,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Enter your email so that we can send you password reset link',
+                  'Please enter the 6-digit code sent to your email',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -102,11 +52,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 30),
                 TextField(
-                  controller: emailController,
+                  controller: codeController,
                   decoration: InputDecoration(
-                    labelText: 'Email here...',
+                    labelText: 'Verification Code',
                     labelStyle: const TextStyle(color: Colors.grey),
-                    hintText: 'e.g. username@gmail.com',
+                    hintText: 'Enter 6-digit code',
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -128,7 +78,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       vertical: 16,
                     ),
                   ),
-                  keyboardType: TextInputType.emailAddress,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
                   cursorColor: AdminColor.secondaryBackgroundColor,
                 ),
                 const SizedBox(height: 20),
@@ -141,13 +92,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: isLoading ? null : _requestPasswordReset,
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            if (codeController.text.length == 6) {
+                              fadePush(
+                                context,
+                                NewPasswordScreen(
+                                  email: widget.email,
+                                  code: codeController.text,
+                                ),
+                              );
+                            }
+                          },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
-                              'Send Email',
+                              'Verify Code',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.white,
@@ -158,16 +121,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: () {
-                    fadePush(context, const LogBookEaseApp());
-                  },
+                  onTap: () => Navigator.pop(context),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.arrow_back, size: 18, color: Colors.black54),
                       SizedBox(width: 5),
                       Text(
-                        'Back to Login',
+                        'Back',
                         style: TextStyle(color: Colors.black54),
                       ),
                     ],
@@ -180,4 +141,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-}
+} 

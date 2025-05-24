@@ -91,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userId = Provider.of<UserData>(context).userID;
     return Stack(
       children: [
         Scaffold(
@@ -98,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           appBar: AppBarWidget(
             onNotificationPressed: _toggleNotificationOverlay,
             unreadCount: _notifications.where((n) => !n.isRead).length,
+            userId: userId,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),

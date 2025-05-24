@@ -47,19 +47,6 @@ class _NotificationPopupState extends State<NotificationPopup> {
     }
   }
 
-  void _markAllAsRead() {
-    setState(() {
-      _notifications = _notifications.map((n) => AppNotification(
-        notificationId: n.notificationId,
-        userId: n.userId,
-        message: n.message,
-        createdAt: n.createdAt,
-        isRead: true,
-      )).toList();
-    });
-    widget.onNotificationsUpdated?.call(_notifications);
-  }
-
   String _formatTime(String timestamp) {
     try {
       final dateTime = DateTime.parse(timestamp);
@@ -90,13 +77,6 @@ class _NotificationPopupState extends State<NotificationPopup> {
                   "Notifications",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                TextButton(
-                  onPressed: _markAllAsRead,
-                  child: const Text(
-                    "Mark All as Read",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ),
               ],
             ),
             const Divider(),
@@ -114,9 +94,9 @@ class _NotificationPopupState extends State<NotificationPopup> {
                             return ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: Icon(
+                              leading: const Icon(
                                 Icons.notifications,
-                                color: notif.isRead ? Colors.grey : Colors.blue,
+                                color: Colors.blue,
                               ),
                               title: Text(
                                 notif.message,
@@ -126,18 +106,6 @@ class _NotificationPopupState extends State<NotificationPopup> {
                                 _formatTime(notif.createdAt),
                                 style: const TextStyle(fontSize: 10, color: Colors.grey),
                               ),
-                              onTap: () {
-                                setState(() {
-                                  _notifications[index] = AppNotification(
-                                    notificationId: notif.notificationId,
-                                    userId: notif.userId,
-                                    message: notif.message,
-                                    createdAt: notif.createdAt,
-                                    isRead: true,
-                                  );
-                                });
-                                widget.onNotificationsUpdated?.call(_notifications);
-                              },
                             );
                           },
                         ),

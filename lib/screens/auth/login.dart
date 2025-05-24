@@ -78,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('userID', userData["user_id"]);
         await prefs.setString('userType', userType);
+        await prefs.setString('current_user_id', userData["user_id"]);
 
         if (mounted) {
           showSuccessSnackBar(
