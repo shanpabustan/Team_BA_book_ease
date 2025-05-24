@@ -29,6 +29,7 @@ class _SidebarState extends State<Sidebar> {
   void showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return LogoutModal(
           onCancel: () {

@@ -13,6 +13,7 @@ BorrowedBook _$BorrowedBookFromJson(Map<String, dynamic> json) => BorrowedBook(
       borrowDate: DateTime.parse(json['borrow_date'] as String),
       dueDate: DateTime.parse(json['due_date'] as String),
       status: json['status'] as String,
+      source: json['source'] as String,
     );
 
 Map<String, dynamic> _$BorrowedBookToJson(BorrowedBook instance) =>
@@ -23,4 +24,5 @@ Map<String, dynamic> _$BorrowedBookToJson(BorrowedBook instance) =>
       'borrow_date': instance.borrowDate.toIso8601String(),
       'due_date': instance.dueDate.toIso8601String(),
       'status': instance.status,
+      'source': instance.source,
     };

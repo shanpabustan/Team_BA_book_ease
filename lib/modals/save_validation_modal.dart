@@ -36,14 +36,6 @@ class SaveValidationModal extends StatelessWidget {
                       color: Color(0xFF1C0E4B),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: onCancel,
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.black,
-                      size: 25,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 20),

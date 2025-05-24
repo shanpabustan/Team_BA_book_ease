@@ -1,4 +1,5 @@
 import 'package:book_ease/screens/admin/components/reuse_dash_card.dart';
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -18,22 +19,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool _isLoading = false;
   String? _error;
 
-  // List of colors for different categories
-  final List<Color> categoryColors = [
-    Colors.blue,
-    Colors.green,
-    Colors.red,
-    Colors.purple,
-    Colors.orange,
-    Colors.teal,
-    Colors.pink,
-    Colors.amber,
-    Colors.indigo,
-    Colors.cyan,
-    Colors.deepOrange,
-    Colors.lightBlue,
-    // Add more colors if needed
-  ];
+  List<Color> generateCategoryColors(int count) {
+    return List.generate(count, (index) {
+      final hue = (360 / count) * index;
+      final saturation = 0.7 + (index % 3) * 0.05; // 0.7, 0.75, 0.8
+      final lightness = 0.6 + (index % 2) * 0.05; // 0.6, 0.65
+      return HSLColor.fromAHSL(
+              1.0, hue, saturation.clamp(0.7, 0.85), lightness.clamp(0.6, 0.7))
+          .toColor();
+    });
+  }
 
   final List<String> months = [
     'January',
@@ -141,7 +136,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       SizedBox(height: 16),
                       Expanded(
                         child: _isLoading
-                            ? Center(child: CircularProgressIndicator())
+                            ? Center(child: SvgLoadingScreen())
                             : _error != null
                                 ? Center(child: Text(_error!))
                                 : _buildBarChart(),
@@ -162,11 +157,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       return Center(child: Text('No data available'));
     }
 
-    final maxY = _categoryStats.map((s) => s.borrowCount).reduce((a, b) => a > b ? a : b).toDouble();
+    final categoryColors = generateCategoryColors(_categoryStats.length);
+    final maxY = _categoryStats
+        .map((s) => s.borrowCount)
+        .reduce((a, b) => a > b ? a : b)
+        .toDouble();
 
     return BarChart(
       BarChartData(
-        maxY: maxY * 1.2,
+        maxY: (maxY + 1).ceilToDouble(), // Round up to next whole number
         barTouchData: BarTouchData(
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
@@ -190,17 +189,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 35,
-              getTitlesWidget: (value, meta) => Text(
-                value.toInt().toString(),
-                style: TextStyle(fontSize: 12),
-              ),
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                if (value % 1 == 0) {
+                  return Text(
+                    value.toInt().toString(),
+                    style: TextStyle(fontSize: 12),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) {
-                if (value.toInt() >= 0 && value.toInt() < _categoryStats.length) {
+                if (value.toInt() >= 0 &&
+                    value.toInt() < _categoryStats.length) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
@@ -214,16 +220,40 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               },
             ),
           ),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
-        gridData: FlGridData(show: true),
-        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 1,
+          getDrawingHorizontalLine: (value) {
+            // Only show lines below or equal to maxY
+            if (value <= maxY) {
+              return FlLine(
+                color: Colors.grey.shade300,
+                strokeWidth: 1,
+              );
+            }
+            return FlLine(color: Colors.transparent); // No line above maxY
+          },
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border(
+            left: BorderSide(color: Colors.black, width: 1), // Left Y-axis
+            bottom: BorderSide(color: Colors.black, width: 1), // Bottom X-axis
+            right: BorderSide(color: Colors.transparent),
+            top: BorderSide(color: Colors.transparent),
+          ),
+        ),
         barGroups: _categoryStats.asMap().entries.map((entry) {
           return BarChartGroupData(
             x: entry.key,
             barRods: [
               BarChartRodData(
                 toY: entry.value.borrowCount.toDouble(),
-                color: categoryColors[entry.key % categoryColors.length],
+                color: categoryColors[entry.key], // Safe: same length
                 width: 20,
                 borderRadius: BorderRadius.circular(4),
               ),

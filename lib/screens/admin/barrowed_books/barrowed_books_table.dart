@@ -2,6 +2,7 @@ import 'package:book_ease/base_url.dart';
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_books_data.dart';
 import 'package:book_ease/screens/admin/barrowed_books/barrowed_return_modal.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -86,7 +87,7 @@ class _BorrowedBooksTableScreenState extends State<BorrowedBooksTableScreen> {
             padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
             width: double.infinity,
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: SvgLoadingScreen())
                 : Column(
                     children: [
                       _buildActionButtons(),
@@ -113,7 +114,16 @@ class _BorrowedBooksTableScreenState extends State<BorrowedBooksTableScreen> {
 
             await ExportService.exportToPdf(
               title: 'Borrowed Books Report',
-              headers: ['Borrow ID', 'User ID', 'Name', 'Book Name', 'Status', 'Borrow Date', 'Due Date', 'Return Date'],
+              headers: [
+                'Borrow ID',
+                'User ID',
+                'Name',
+                'Book Name',
+                'Status',
+                'Borrow Date',
+                'Due Date',
+                'Return Date'
+              ],
               data: ExportService.formatBorrowedBookData(selectedBooks),
               fileName: 'borrowed_books_report',
             );
@@ -124,7 +134,16 @@ class _BorrowedBooksTableScreenState extends State<BorrowedBooksTableScreen> {
 
             await ExportService.exportToExcel(
               title: 'Borrowed Books',
-              headers: ['Borrow ID', 'User ID', 'Name', 'Book Name', 'Status', 'Borrow Date', 'Due Date', 'Return Date'],
+              headers: [
+                'Borrow ID',
+                'User ID',
+                'Name',
+                'Book Name',
+                'Status',
+                'Borrow Date',
+                'Due Date',
+                'Return Date'
+              ],
               data: ExportService.formatBorrowedBookData(selectedBooks),
               fileName: 'borrowed_books_report',
             );

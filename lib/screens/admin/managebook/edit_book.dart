@@ -83,7 +83,7 @@ class _EditBookFormState extends State<EditBookForm> {
     _yearController = TextEditingController(text: widget.book['year']);
     _versionController = TextEditingController(text: widget.book['version']);
     _isbnController = TextEditingController(text: widget.book['isbn']);
-    _totalCopiesController = TextEditingController(text: widget.book['copies']);
+    _totalCopiesController = TextEditingController(text: widget.book['totalCopies']);
     _sectionController = TextEditingController(text: widget.book['section']);
     _shelfLocationController =
         TextEditingController(text: widget.book['shelfLocation']);
@@ -231,7 +231,7 @@ class _EditBookFormState extends State<EditBookForm> {
         'library_section': _sectionController.text.trim(),
         'shelf_location': _shelfLocationController.text.trim(),
         'total_copies': int.tryParse(_totalCopiesController.text) ?? 0,
-        'available_copies': int.tryParse(_totalCopiesController.text) ?? 0,
+        //'available_copies': int.tryParse(_totalCopiesController.text) ?? 0,
         'book_condition': _selectedCondition,
         'picture': base64Image,
         'year_published': int.tryParse(_yearController.text) ?? 0,

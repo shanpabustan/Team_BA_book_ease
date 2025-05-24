@@ -43,12 +43,32 @@ class _MultiStepSignUpScreenState extends State<MultiStepSignUpScreen> {
   bool _obscureConfirmPassword = true;
 
   final List<String> _courses = [
-    'BS Computer Science',
-    'BS Information Technology',
-    'BS Business Administration',
-    'BS Engineering',
-    'BS Education',
-  ];
+  'BS Computer Science',
+  'BS Information Technology',
+  'BS Business Administration',
+  'BS Engineering',
+  'BS Education',
+  'BS Accountancy',
+  'BS Psychology',
+  'BS Nursing',
+  'BS Criminology',
+  'BS Hospitality Management',
+  'BS Tourism Management',
+  'BS Architecture',
+  'BS Civil Engineering',
+  'BS Mechanical Engineering',
+  'BS Electrical Engineering',
+  'BS Electronics Engineering',
+  'BS Pharmacy',
+  'BS Biology',
+  'BS Mathematics',
+  'BS Environmental Science',
+  'AB Communication',
+  'AB Political Science',
+  'AB English',
+  'AB History',
+];
+
 
   final List<String> _yearLevels = [
     '1st Year',

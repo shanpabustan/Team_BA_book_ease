@@ -17,7 +17,7 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   }) : super(key: key);
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 20);
 
   @override
   State<AppBarWidget> createState() => _AppBarWidgetState();
@@ -93,82 +93,104 @@ class _AppBarWidgetState extends State<AppBarWidget> {
   Widget build(BuildContext context) {
     final userId = context.watch<UserData>().userID;
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.all(10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                if (MediaQuery.of(context).size.width < 800)
-                  IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black87),
-                    onPressed: () =>
-                        widget.scaffoldKey.currentState?.openDrawer(),
-                  ),
-                Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: 20, vertical: 10), // <-- Adjust horizontal spacing here
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  if (MediaQuery.of(context).size.width < 800)
                     IconButton(
-                      key: _notifIconKey,
-                      icon: const Icon(Icons.notifications, color: Colors.black87, size: 28),
-                      onPressed: () => _toggleNotificationPopup(context, userId),
+                      icon: const Icon(Icons.menu, color: Colors.black87),
+                      onPressed: () =>
+                          widget.scaffoldKey.currentState?.openDrawer(),
                     ),
-                    if (!_isLoading && unreadCount > 0)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Center(
-                            child: Text(
-                              unreadCount > 9 ? '9+' : unreadCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                  Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        key: _notifIconKey,
+                        icon: const Icon(Icons.notifications,
+                            color: Colors.black87, size: 28),
+                        onPressed: () =>
+                            _toggleNotificationPopup(context, userId),
+                      ),
+                      if (!_isLoading && unreadCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: Colors.white, width: 1.5),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Center(
+                              child: Text(
+                                unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
+                  const SizedBox(width: 10),
+                  Consumer<UserData>(
+                  builder: (context, userData, child) {
+                    final avatarPath = userData.avatarPath;
+
+                    ImageProvider imageProvider;
+                    if (avatarPath.startsWith('http')) {
+                      imageProvider = NetworkImage(avatarPath);
+                    } else if (avatarPath.startsWith('assets/')) {
+                      imageProvider = AssetImage(avatarPath);
+                    } else {
+                      imageProvider = const AssetImage('assets/icons/default-avatar.png'); // fallback
+                    }
+
+                    return CircleAvatar(
+                      radius: 20,
+                      backgroundImage: imageProvider,
+                    );
+                  },
                 ),
-                const SizedBox(width: 10),
-                const CircleAvatar(
-                  radius: 20,
-                  backgroundImage: AssetImage('assets/images/bini.jpg'),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

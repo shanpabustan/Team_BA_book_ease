@@ -38,7 +38,7 @@ class PaginationWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('Rows per page: ', style: TextStyle(fontSize: 13)),
+              const Text('Rows per page: ', style: TextStyle(fontSize: 15)),
               DropdownButton<int>(
                 value: rowsPerPage,
                 onChanged: (value) {
@@ -50,13 +50,13 @@ class PaginationWidget extends StatelessWidget {
                   return DropdownMenuItem<int>(
                     value: value,
                     child: Text(value.toString(),
-                        style: const TextStyle(fontSize: 13)),
+                        style: const TextStyle(fontSize: 15)),
                   );
                 }).toList(),
               ),
               const SizedBox(width: 16),
               Text('$start–$end of $totalRows',
-                  style: const TextStyle(fontSize: 13)),
+                  style: const TextStyle(fontSize: 15)),
             ],
           ),
           Row(

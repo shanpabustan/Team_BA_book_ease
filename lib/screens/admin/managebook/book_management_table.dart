@@ -1,4 +1,5 @@
 import 'package:book_ease/base_url.dart';
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,6 +63,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
             'version': json['version'].toString(),
             'isbn': json['isbn'] ?? '',
             'copies': json['available_copies'].toString(),
+            'totalCopies': json['total_copies'].toString(),
             'section': json['library_section'] ?? '',
             'shelfLocation': json['shelf_location'] ?? '',
             'category': json['category'] ?? '',
@@ -98,7 +100,7 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
             padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
             width: double.infinity,
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: SvgLoadingScreen())
                 : Column(
                     children: [
                       _buildActionButtons(),
@@ -125,7 +127,15 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
             await ExportService.exportToPdf(
               title: 'Books Report',
-              headers: ['Book ID', 'Title', 'Author', 'Year', 'Category', 'Condition', 'Copies'],
+              headers: [
+                'Book ID',
+                'Title',
+                'Author',
+                'Year',
+                'Category',
+                'Condition',
+                'Copies'
+              ],
               data: ExportService.formatBookData(selectedBooks),
               fileName: 'books_report',
             );
@@ -136,7 +146,15 @@ class _BookManagementScreenState extends State<BookManagementScreen> {
 
             await ExportService.exportToExcel(
               title: 'Books',
-              headers: ['Book ID', 'Title', 'Author', 'Year', 'Category', 'Condition', 'Copies'],
+              headers: [
+                'Book ID',
+                'Title',
+                'Author',
+                'Year',
+                'Category',
+                'Condition',
+                'Copies'
+              ],
               data: ExportService.formatBookData(selectedBooks),
               fileName: 'books_report',
             );

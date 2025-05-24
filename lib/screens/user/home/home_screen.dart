@@ -12,7 +12,12 @@ import 'package:book_ease/data/userdashbook_data.dart';
 import 'package:book_ease/data/notification_data.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback onReserveTap;
+  
+  const HomeScreen({
+    super.key,
+    required this.onReserveTap,
+  });
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -23,6 +28,21 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isFetchingNotifs = true;
   List<AppNotification> _notifications = [];
   final ValueNotifier<String> _selectedCategory = ValueNotifier<String>('All');
+
+  // Static list of categories for home screen
+  final List<String> _staticCategories = [
+    
+    'Fiction',
+    'Non-Fiction',
+    'Textbooks',
+    'Reference Materials',
+    'Children\'s Books',
+    'Young Adult',
+    'Science & Technology',
+    'History & Social Studies',
+    'Biographies',
+    'Comics & Graphic Novels'
+  ];
 
   void _toggleNotificationOverlay() {
     setState(() {
@@ -57,6 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final bookProvider = Provider.of<BookProvider>(context, listen: false);
       if (userId != null) {
         bookProvider.fetchBorrowedBooks(userId);
+        bookProvider.fetchRecommendedBooks(userId);
+        bookProvider.fetchPopularBooks();
       }
     });
   }
@@ -83,13 +105,74 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 UIComponents.sectionTitle('Explore New Books'),
-                const BannerWidget(),
+                BannerWidget(onReserveTap: widget.onReserveTap),
                 const SizedBox(height: 25),
-                UIComponents.selectCategory(_selectedCategory),
+                ValueListenableBuilder<String>(
+                  valueListenable: _selectedCategory,
+                  builder: (context, value, _) {
+                    return SizedBox(
+                      height: 35,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _staticCategories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final category = _staticCategories[index];
+                          final isSelected = value == category;
+
+                          return TextButton(
+                            style: TextButton.styleFrom(
+                              backgroundColor: isSelected
+                                  ? Colors.teal
+                                  : Colors.grey[200],
+                              foregroundColor:
+                                  isSelected ? Colors.white : Colors.black87,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            onPressed: () => _selectedCategory.value = category,
+                            child: Text(
+                              category,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 10),
-                UIComponents.bookSection(context, 'Recommendations', getBooks),
-                UIComponents.bookSection(context, 'Trending Books', getBooks),
-                UIComponents.bookSection(context, 'Borrowed Books', getBooks),
+                Consumer<BookProvider>(
+                  builder: (context, bookProvider, child) {
+                    return Column(
+                      children: [
+                        UIComponents.bookSection(
+                          context,
+                          'Recommendations',
+                          (category) => bookProvider.recommendedBooks.map((book) => {
+                                'title': book.title,
+                                'copies': '${book.copies} copies available',
+                                'image': book.image,
+                              }).toList(),
+                        ),
+                        UIComponents.bookSection(
+                          context,
+                          'Most Popular',
+                          (category) => bookProvider.popularBooks.map((book) => {
+                                'title': book.title,
+                                'copies': '${book.copies} copies available',
+                                'image': book.image,
+                              }).toList(),
+                        ),
+                        
+                        UIComponents.bookSection(context, 'Borrowed Books', getBooks),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),

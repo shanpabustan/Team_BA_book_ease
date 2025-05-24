@@ -53,6 +53,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _fetchNotifications();
       Provider.of<BookProvider>(context, listen: false).fetchBooks();
     });
+
+    // Add listener to debug category changes
+    _selectedCategory.addListener(() {
+      print('Selected category changed to: ${_selectedCategory.value}');
+    });
   }
 
   @override
@@ -64,17 +69,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final userId = Provider.of<UserData>(context).userID;
+    final bookProvider = Provider.of<BookProvider>(context);
+
+    // Debug print for books
+    print('Total books in provider: ${bookProvider.books.length}');
+    print(
+        'Books categories: ${bookProvider.books.map((b) => b.category).toSet()}');
 
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: Colors.white, // Set Scaffold background white
+          backgroundColor: Colors.white,
           appBar: AppBarWidget(
             onNotificationPressed: _toggleNotificationOverlay,
             unreadCount: _notifications.where((n) => !n.isRead).length,
           ),
           body: Container(
-            color: Colors.white, // Background white behind CustomScrollView
+            color: Colors.white,
             child: CustomScrollView(
               slivers: [
                 SliverPersistentHeader(
@@ -87,7 +98,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         horizontal: 16.0,
                         vertical: 10,
                       ),
-                      child: UIComponents.selectCategory(_selectedCategory),
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: _selectedCategory,
+                        builder: (context, category, child) {
+                          return UIComponents.selectCategory(_selectedCategory);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -103,7 +119,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: BookGrid(userId: userId),
+                    child: ValueListenableBuilder<String>(
+                      valueListenable: _selectedCategory,
+                      builder: (context, category, child) {
+                        final filteredBooks =
+                            bookProvider.getBooksByCategory(category);
+                        print(
+                            'Filtered books for $category: ${filteredBooks.length}');
+                        return BookGrid(
+                          userId: userId,
+                          selectedCategory: category,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -135,10 +163,7 @@ class _FixedHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox(
-      height: height,
-      child: child,
-    );
+    return SizedBox(height: height, child: child);
   }
 
   @override

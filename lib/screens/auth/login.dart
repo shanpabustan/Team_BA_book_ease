@@ -16,6 +16,8 @@ import 'multisignup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 
+import 'package:book_ease/widgets/svg_loading_screen.dart'; // <-- import your loading widget here
+
 void main() {
   runApp(const LogBookEaseApp());
 }
@@ -50,6 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool _isLoading = false; // <-- loading flag
+
   void _loginUser() async {
     final Dio dio = Dio();
     final String apiUrl = "${ApiConfig.baseUrl}/stud/login";
@@ -81,6 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
             title: 'Login Successful!',
             message: 'You have logged in successfully.',
           );
+          // Show loading screen
+          setState(() {
+            _isLoading = true;
+          });
         }
 
         final userProvider = Provider.of<UserData>(context, listen: false);
@@ -100,14 +108,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Route based on user type
         if (userType == "Admin") {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => AdminDashboard()));
+          await Future.delayed(
+              const Duration(milliseconds: 500)); // small delay to show loading
+          if (mounted) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => AdminDashboard()));
+          }
         } else if (userType == "Student") {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const UserDashApp()));
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const UserDashApp()));
+          }
         } else {
-          showWarningSnackBar(context,
-              title: 'Login Error', message: 'Unknown user type!');
+          if (mounted) {
+            showWarningSnackBar(context,
+                title: 'Login Error', message: 'Unknown user type!');
+            setState(() {
+              _isLoading = false;
+            });
+          }
         }
       } else {
         // Handle custom backend errors
@@ -154,6 +174,12 @@ class _LoginScreenState extends State<LoginScreen> {
               message: "Could not connect to server.");
         }
       }
+    } finally {
+      if (mounted && !_isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -168,104 +194,119 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            bool isWideScreen = constraints.maxWidth > 1000;
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                bool isWideScreen = constraints.maxWidth > 1000;
 
-            return SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: double.infinity,
-                child: isWideScreen
-                    ? Row(
-                        children: [
-                          // 📌 Left Side: Logo with Full Teal Background
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              color: AdminColor.secondaryBackgroundColor,
-                              alignment: Alignment.center,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Image.asset(
-                                    'assets/images/admin_logo_white.png',
-                                    width:
-                                        constraints.maxWidth > 1200 ? 300 : 250,
-                                    height:
-                                        constraints.maxWidth > 1200 ? 300 : 250,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  Transform.translate(
-                                    offset: const Offset(0,
-                                        -15), // Moves text **UPWARD** by 20 pixels
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          "BOOKEASE",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 40,
-                                            fontWeight: FontWeight.w800,
-                                            color: const Color.fromARGB(
-                                                255, 255, 255, 255),
-                                          ),
+                return SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    width: double.infinity,
+                    child: isWideScreen
+                        ? Row(
+                            children: [
+                              // 📌 Left Side: Logo with Full Teal Background
+                              Expanded(
+                                flex: 1,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  color: AdminColor.secondaryBackgroundColor,
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/admin_logo_white.png',
+                                        width: constraints.maxWidth > 1200
+                                            ? 300
+                                            : 250,
+                                        height: constraints.maxWidth > 1200
+                                            ? 300
+                                            : 250,
+                                        fit: BoxFit.contain,
+                                      ),
+                                      Transform.translate(
+                                        offset: const Offset(0,
+                                            -15), // Moves text **UPWARD** by 20 pixels
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              "BOOKEASE",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 40,
+                                                fontWeight: FontWeight.w800,
+                                                color: const Color.fromARGB(
+                                                    255, 255, 255, 255),
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                                height: 2), // Minimal spacing
+                                            Text(
+                                              "BORROW SMART",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 24,
+                                                color: const Color.fromARGB(
+                                                    255, 249, 249, 249),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(
-                                            height: 2), // Minimal spacing
-                                        Text(
-                                          "BORROW SMART",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 24,
-                                            color: const Color.fromARGB(
-                                                255, 249, 249, 249),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
 
-                          // 📌 Right Side: Login Form
-                          Expanded(
-                            flex: 1,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                top: 50,
-                                left: 50,
-                                right: 50,
+                              // 📌 Right Side: Login Form
+                              Expanded(
+                                flex: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 50,
+                                    left: 50,
+                                    right: 50,
+                                  ),
+                                  child: _buildLoginForm(context, isWideScreen),
+                                ),
                               ),
-                              child: _buildLoginForm(context, isWideScreen),
+                            ],
+                          )
+                        : Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: Image.asset(
+                                    'assets/images/admin_logo_green.png',
+                                    height: 150,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                _buildLoginForm(context, isWideScreen),
+                              ],
                             ),
-                          ),
-                        ],
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20),
-                              child: Image.asset(
-                                'assets/images/admin_logo_green.png',
-                                height: 150,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildLoginForm(context, isWideScreen),
-                          ],
-                        ),
-                      ));
-          },
-        ),
+                          ));
+              },
+            ),
+          ),
+          // Loading overlay
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.4),
+              child: const Center(
+                child: SvgLoadingScreen(),
+              ),
+            ),
+        ],
       ),
     );
   }

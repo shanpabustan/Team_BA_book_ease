@@ -8,66 +8,72 @@ class LibraryPolicyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AdminColor.lightGreenBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              'Library Policy',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AdminColor.secondaryBackgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Custom Back Button
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 20),
-            _policyCard(
-              icon: Icons.menu_book,
-              iconColor: Colors.lightBlueAccent,
-              title: 'Book Reservation',
-              description:
-                  'Reservations are subject to book availability.\nIf a book is currently borrowed, the reservation will be queued, and users will be notified once it becomes available.',
-            ),
-            _policyCard(
-              icon: Icons.menu_book_outlined,
-              iconColor: Colors.lightGreen,
-              title: 'Borrowing Guide',
-              description:
-                  'Each member is allowed to borrow up to 3 books at a time. The standard borrowing period for each book is 1 week.',
-            ),
-            _policyCard(
-              icon: Icons.assignment_return,
-              iconColor: Colors.teal,
-              title: 'Returning',
-              description:
-                  'Books must be returned on or before the due date to avoid penalties.',
-            ),
-            _policyCard(
-              icon: Icons.error_outline,
-              iconColor: Colors.redAccent,
-              title: 'Fines & Penalties',
-              description:
-                  'Late returns are subject to a fine of ₱15 per day, per book.\nLost or damaged books must be replaced or paid for at the current market value.',
-            ),
-            const Spacer(),
-            _helpCard(context),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 10),
+              const Center(
+                child: Text(
+                  'Library Policy',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AdminColor.secondaryBackgroundColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _policyCard(
+                icon: Icons.menu_book,
+                iconColor: Colors.lightBlueAccent,
+                title: 'Book Reservation',
+                description:
+                    'Reserved books must be picked up at the library by the pickup date. If not collected within 24 hours after the pickup date, the reservation expires.',
+              ),
+              _policyCard(
+                icon: Icons.menu_book_outlined,
+                iconColor: Colors.lightGreen,
+                title: 'Borrowing Guide',
+                description:
+                    'Students may borrow books based on availability. The borrowing period is 7 days. Books not returned by the due date are marked overdue.',
+              ),
+              _policyCard(
+                icon: Icons.assignment_return,
+                iconColor: Colors.teal,
+                title: 'Returning',
+                description:
+                    'Books must be returned on or before the due date to avoid penalties.',
+              ),
+              _policyCard(
+                icon: Icons.error_outline,
+                iconColor: Colors.redAccent,
+                title: 'Fines & Penalties',
+                description:
+                    'Late returns are marked overdue. Lost or damaged books must be replaced or paid for. After 3 consecutive overdue returns, the student\'s account is blocked and login is disabled.',
+              ),
+              const SizedBox(height: 20),
+              _helpCard(context),
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _policyCard({
+  static Widget _policyCard({
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -117,10 +123,9 @@ class LibraryPolicyScreen extends StatelessWidget {
     );
   }
 
-  Widget _helpCard(BuildContext context) {
+  static Widget _helpCard(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Action when user taps "Need help?"
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Redirecting to help...")),
         );

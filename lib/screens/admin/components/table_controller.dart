@@ -80,17 +80,14 @@ class TableController<T> {
   }
 
   // Toggle "select all" rows on the current page
-  void toggleSelectAll(bool? value, VoidCallback setState) {
-    isAllSelected = value ?? false;
-    int start = currentPage * rowsPerPage;
-    int end = (start + rowsPerPage > dataList.length)
-        ? dataList.length
-        : start + rowsPerPage;
-    for (int i = start; i < end; i++) {
-      selectedRows[i] = isAllSelected;
+  void toggleSelectAll(bool? value, VoidCallback updateUI) {
+    final shouldSelect = value ?? false;
+    for (int i = 0; i < selectedRows.length; i++) {
+      selectedRows[i] = shouldSelect;
     }
-    _checkButtonState();
-    setState();
+
+    isAllSelected = shouldSelect;
+    updateUI();
   }
 
   // Toggle selection of individual row

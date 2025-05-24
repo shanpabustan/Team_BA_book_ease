@@ -36,10 +36,6 @@ class LogoutModal extends StatelessWidget {
                       color: Color(0xFF1C0E4B), // dark purple
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.close, color: Colors.black54),
-                  ),
                 ],
               ),
               const SizedBox(height: 20),

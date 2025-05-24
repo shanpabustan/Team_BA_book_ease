@@ -35,7 +35,7 @@ class _ProfileCardState extends State<ProfileCard> {
   final _yearLevelController = TextEditingController();
 
   String _imageUrl = '';
-  
+
   final List<String> _avatarChoices = [
     'assets/icons/j-rizz.png',
     'assets/icons/boy-icon.png',
@@ -64,7 +64,9 @@ class _ProfileCardState extends State<ProfileCard> {
       _phoneController.text = userData.contactNumber;
       _programController.text = userData.program;
       _yearLevelController.text = userData.yearLevel;
-      _imageUrl = userData.avatarPath.isNotEmpty ? userData.avatarPath : _avatarChoices[0];
+      _imageUrl = userData.avatarPath.isNotEmpty
+          ? userData.avatarPath
+          : _avatarChoices[0];
       _isLoading = false;
     });
   }
@@ -96,7 +98,8 @@ class _ProfileCardState extends State<ProfileCard> {
         showWarningSnackBar(
           context,
           title: 'Update Failed',
-          message: response.data['Message'] ?? 'Failed to update profile picture',
+          message:
+              response.data['Message'] ?? 'Failed to update profile picture',
         );
       }
     } catch (e) {
@@ -111,43 +114,58 @@ class _ProfileCardState extends State<ProfileCard> {
   void _showAvatarPicker() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Choose Your Avatar",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GridView.builder(
-                shrinkWrap: true,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: _avatarChoices.length,
-                itemBuilder: (context, index) {
-                  final avatarPath = _avatarChoices[index];
-                  return GestureDetector(
-                    onTap: () => _updateAvatar(avatarPath),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage(avatarPath),
-                      backgroundColor: Colors.grey[200],
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.8,
+          builder: (context, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Choose Your Avatar",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount:
+                            5, // Changed from 3 to 4 for tighter grid
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: _avatarChoices.length,
+                      itemBuilder: (context, index) {
+                        final avatarPath = _avatarChoices[index];
+                        return GestureDetector(
+                          onTap: () => _updateAvatar(avatarPath),
+                          child: CircleAvatar(
+                            radius: 28, // Reduced from 40 to 28
+                            backgroundImage: AssetImage(avatarPath),
+                            backgroundColor: Colors.grey[200],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -166,11 +184,12 @@ class _ProfileCardState extends State<ProfileCard> {
 
     try {
       final userId = context.read<UserData>().userID;
-      
+
       // Create temporary data structure
       final Map<String, dynamic> updateData = {
-        'user_id': _idNumberController.text.trim(),  // Use the new ID from the field
-        'email': _emailController.text.trim(),       // Include email in the update
+        'user_id':
+            _idNumberController.text.trim(), // Use the new ID from the field
+        'email': _emailController.text.trim(), // Include email in the update
         'first_name': _firstNameController.text.trim(),
         'last_name': _lastNameController.text.trim(),
         'contact_number': _phoneController.text.trim(),
@@ -196,7 +215,7 @@ class _ProfileCardState extends State<ProfileCard> {
         if (response.data['RetCode'] == '200') {
           final userData = Provider.of<UserData>(context, listen: false);
           final updatedData = response.data['Data'];
-          
+
           userData.updateUser(
             firstName: updatedData['first_name'],
             lastName: updatedData['last_name'],
@@ -229,7 +248,8 @@ class _ProfileCardState extends State<ProfileCard> {
           showSuccessSnackBar(
             context,
             title: 'Success!',
-            message: response.data['Message'] ?? 'Profile updated successfully.',
+            message:
+                response.data['Message'] ?? 'Profile updated successfully.',
           );
         } else {
           showWarningSnackBar(
@@ -248,14 +268,14 @@ class _ProfileCardState extends State<ProfileCard> {
     } on DioException catch (e) {
       print('DioError: ${e.message}');
       print('DioError response: ${e.response?.data}');
-      
+
       String errorMessage = 'Failed to update profile';
       if (e.response?.data != null && e.response?.data['Message'] != null) {
         errorMessage = e.response?.data['Message'];
       } else if (e.message != null) {
         errorMessage = e.message!;
       }
-      
+
       showErrorSnackBar(
         context,
         title: 'Error',
@@ -305,9 +325,11 @@ class _ProfileCardState extends State<ProfileCard> {
                             bottom: 0,
                             child: CircleAvatar(
                               radius: 18,
-                              backgroundColor: AdminColor.secondaryBackgroundColor,
+                              backgroundColor:
+                                  AdminColor.secondaryBackgroundColor,
                               child: IconButton(
-                                icon: const Icon(Icons.edit, size: 18, color: Colors.white),
+                                icon: const Icon(Icons.edit,
+                                    size: 18, color: Colors.white),
                                 onPressed: _showAvatarPicker,
                               ),
                             ),
@@ -325,9 +347,14 @@ class _ProfileCardState extends State<ProfileCard> {
                     Text(_roleController.text),
                     const SizedBox(height: 12),
                     FilledButton.icon(
-                      onPressed: _isUpdating ? null : (_isEditing ? _saveProfile : _toggleEdit),
-                      icon: Icon(_isEditing ? Icons.save : Icons.edit, size: 18),
-                      label: Text(_isUpdating ? "Saving..." : (_isEditing ? "Save" : "Edit")),
+                      onPressed: _isUpdating
+                          ? null
+                          : (_isEditing ? _saveProfile : _toggleEdit),
+                      icon:
+                          Icon(_isEditing ? Icons.save : Icons.edit, size: 18),
+                      label: Text(_isUpdating
+                          ? "Saving..."
+                          : (_isEditing ? "Save" : "Edit")),
                       style: FilledButton.styleFrom(
                         backgroundColor: AdminColor.secondaryBackgroundColor,
                         foregroundColor: Colors.white,
@@ -404,8 +431,7 @@ class _ProfileCardState extends State<ProfileCard> {
                           children: [
                             Expanded(
                               child: ProfileField(
-                                  label: "Role",
-                                  value: _roleController.text),
+                                  label: "Role", value: _roleController.text),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -437,11 +463,12 @@ class _ProfileCardState extends State<ProfileCard> {
     return _isEditing
         ? TextFormField(
             controller: controller,
-            enabled: _isEditing, // Remove the condition that disabled ID and email fields
+            enabled:
+                _isEditing, // Remove the condition that disabled ID and email fields
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: const TextStyle(
-                  color: AdminColor.secondaryBackgroundColor),
+              labelStyle:
+                  const TextStyle(color: AdminColor.secondaryBackgroundColor),
               border: const OutlineInputBorder(),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(

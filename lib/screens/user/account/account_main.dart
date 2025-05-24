@@ -167,6 +167,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     onPressed: () {
                       showModalBottomSheet(
                         context: context,
+                        isScrollControlled: true,
                         builder: (context) {
                           return Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -182,35 +183,44 @@ class _AccountScreenState extends State<AccountScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 3,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
+                                // Wrap GridView in an Expanded + ConstrainedBox + SizedBox for scrollability
+                                SizedBox(
+                                  height:
+                                      300, // Set a max height so the bottom sheet doesn't overflow
+                                  child: GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount:
+                                          4, // ✅ Tighter grid layout
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                    ),
+                                    itemCount: _avatarChoices.length,
+                                    itemBuilder: (context, index) {
+                                      final avatarPath = _avatarChoices[index];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          _updateAvatar(avatarPath);
+                                        },
+                                        child: CircleAvatar(
+                                          radius:
+                                              30, // ✅ Reduced size (default is 40)
+                                          backgroundImage:
+                                              AssetImage(avatarPath),
+                                          backgroundColor: Colors.grey[200],
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  itemCount: _avatarChoices.length,
-                                  itemBuilder: (context, index) {
-                                    final avatarPath = _avatarChoices[index];
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        _updateAvatar(avatarPath);
-                                      },
-                                      child: CircleAvatar(
-                                        radius: 40,
-                                        backgroundImage: AssetImage(avatarPath),
-                                        backgroundColor: Colors.grey[200],
-                                      ),
-                                    );
-                                  },
                                 ),
                               ],
                             ),
                           );
                         },
-                        isScrollControlled: true,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -283,6 +293,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
               showDialog(
                 context: context,
+                barrierDismissible: false,
                 builder: (BuildContext context) {
                   return LogoutModal(
                     onCancel: () {
@@ -331,7 +342,6 @@ class _AccountScreenState extends State<AccountScreen> {
                   );
                 },
               );
-              
             },
           ),
         ],

@@ -181,7 +181,7 @@ class ViewBookModal extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: _buildTextField(
-                                    label: 'Copies',
+                                    label: 'Available Copies',
                                     value: book['copies'] ?? '',
                                   ),
                                 ),

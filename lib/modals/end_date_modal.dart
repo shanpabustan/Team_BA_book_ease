@@ -6,6 +6,7 @@ Future<bool?> showEndDateConfirmationDialog(
     BuildContext context, DateTime pickedDate) async {
   return await showDialog<bool>(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return Dialog(
         backgroundColor: Colors.white,
@@ -27,10 +28,6 @@ Future<bool?> showEndDateConfirmationDialog(
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF1C0E4B),
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context, false),
-                      child: const Icon(Icons.close, color: Colors.black54),
                     ),
                   ],
                 ),

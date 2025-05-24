@@ -23,6 +23,7 @@ Future<List<Map<String, String>>> fetchBookList() async {
             'version': json['version'].toString(),
             'isbn': json['isbn'] ?? '',
             'copies': json['available_copies'].toString(),
+            'totalCopies': json['total_copies'].toString(),
             'section': json['library_section'] ?? '',
             'shelfLocation': json['shelf_location'] ?? '',
             'category': json['category'] ?? '',
@@ -32,7 +33,7 @@ Future<List<Map<String, String>>> fetchBookList() async {
           };
         }).toList();
       } else {
-        throw Exception("API returned unexpected format: ${responseBody['Data']}");
+        throw Exception("API returned unexpected format: ${responseBody['data']}");
       }
     } else {
       throw Exception('Failed to load books');

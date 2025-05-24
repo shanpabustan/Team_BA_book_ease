@@ -20,8 +20,7 @@ void reserveBook(
   print("User ID: $userId");
   print("Pickup Date: ${pickupDate.toIso8601String()}");
 
-  String formattedPickupDate =
-      "${pickupDate.toUtc().toIso8601String().split(".")[0]}Z";
+  String formattedPickupDate = "${pickupDate.toIso8601String().split(".")[0]}Z";
 
   try {
     final response = await Dio().post(
@@ -209,23 +208,31 @@ void showReservationModal(
                     if (preferredPickupDate != null)
                       Row(
                         children: [
-                          Icon(Icons.calendar_today,
-                              size: 20,
-                              color: AdminColor.secondaryBackgroundColor),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                            color: AdminColor.secondaryBackgroundColor,
+                          ),
                           SizedBox(width: 8),
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "Pickup Date: ",
-                                  style: AppTextStyles.body
-                                      .copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                TextSpan(
-                                  text: dateFormat.format(preferredPickupDate!),
-                                  style: AppTextStyles.body,
-                                ),
-                              ],
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: "Pickup Date: ",
+                                    style: AppTextStyles.body
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        dateFormat.format(preferredPickupDate!),
+                                    style: AppTextStyles.body,
+                                  ),
+                                ],
+                              ),
+                              overflow: TextOverflow
+                                  .ellipsis, // optional: prevents text from overflowing with "..."
+                              softWrap: true,
                             ),
                           ),
                         ],

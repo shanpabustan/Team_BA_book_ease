@@ -8,39 +8,9 @@ class BorrowedBooksService {
 
   Future<List<BorrowedBook>> fetchBorrowedBooksByStatus(String userId, String status) async {
     try {
-      print('Making request to: $baseUrl with user_id: $userId and status: $status');
+      print('Making request to: $baseUrl');
+      print('Query parameters: user_id: $userId, status: $status');
       
-      // If status is "All", we'll fetch books for each status and combine them
-      if (status == "All") {
-        final List<String> allStatuses = ["Pending", "Canceled", "Returned", "Unreturned", "Overdue"];
-        List<BorrowedBook> allBooks = [];
-        
-        for (String status in allStatuses) {
-          try {
-            final response = await _dio.get(
-              baseUrl,
-              queryParameters: {
-                'user_id': userId,
-                'status': status,
-              },
-            );
-
-            if (response.statusCode == 200 && response.data['retCode'] == '200' && response.data['data'] != null) {
-              final List<dynamic> data = response.data['data'] as List;
-              final books = data.map((json) => BorrowedBook.fromJson(json)).toList();
-              allBooks.addAll(books);
-            }
-          } catch (e) {
-            print('Error fetching books for status $status: $e');
-            // Continue with other statuses even if one fails
-            continue;
-          }
-        }
-        
-        return allBooks;
-      }
-      
-      // For specific status
       final response = await _dio.get(
         baseUrl,
         queryParameters: {
@@ -49,7 +19,8 @@ class BorrowedBooksService {
         },
       );
 
-      print('Response received: ${response.data}');
+      print('Response status code: ${response.statusCode}');
+      print('Response data: ${response.data}');
 
       if (response.statusCode == 200) {
         if (response.data['retCode'] == '200') {
@@ -59,29 +30,40 @@ class BorrowedBooksService {
           }
           
           final List<dynamic> data = response.data['data'] as List;
-          print('Parsed data: $data');
+          print('Number of books found: ${data.length}');
+          print('First book data: ${data.isNotEmpty ? data.first : "No books"}');
           
-          return data.map((json) {
+          final books = data.map((json) {
             try {
-              return BorrowedBook.fromJson(json);
+              final book = BorrowedBook.fromJson(json);
+              print('Successfully parsed book: ${book.title} (Status: ${book.status}, Source: ${book.source})');
+              return book;
             } catch (e) {
               print('Error parsing book: $e');
               print('Problematic JSON: $json');
               rethrow;
             }
           }).toList();
+
+          print('Total books parsed successfully: ${books.length}');
+          return books;
         } else {
+          print('API returned error: ${response.data['message']}');
           throw Exception(response.data['message'] ?? 'Failed to fetch borrowed books');
         }
       } else {
+        print('API request failed with status code: ${response.statusCode}');
         throw Exception('Failed to fetch borrowed books: ${response.statusCode}');
       }
     } on DioException catch (e) {
       print('DioError details: ${e.response?.data}');
+      print('DioError message: ${e.message}');
+      print('DioError type: ${e.type}');
       throw Exception('Network Error: ${e.message}');
     } catch (e) {
       print('Error in fetchBorrowedBooksByStatus: $e');
       throw Exception('Error fetching borrowed books: $e');
     }
   }
-} 
+
+}

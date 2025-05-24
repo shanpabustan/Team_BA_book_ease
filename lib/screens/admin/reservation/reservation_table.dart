@@ -3,6 +3,7 @@ import 'package:book_ease/screens/admin/reservation/reservation_data.dart';
 import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:book_ease/utils/warning_snack_bar.dart';
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import the google_fonts package
 import 'package:dio/dio.dart';
@@ -79,7 +80,7 @@ class _ReservationTableState extends State<ReservationTable> {
         padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
         width: double.infinity,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: SvgLoadingScreen())
             : Column(
                 children: [
                   _buildActionButtons(),

@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:book_ease/provider/book_provider.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:book_ease/screens/user/home/book_details_modal.dart';
 import 'package:book_ease/screens/user/home/see_all_screen.dart';
+import 'package:book_ease/screens/user/user_components/book_detail_helper.dart';
 import 'package:book_ease/utils/navigator_helper.dart';
 //import 'package:book_ease/widgets/search_widget.dart';
 import 'package:flutter/material.dart';
@@ -21,57 +24,46 @@ class UIComponents {
   }
 
   static Widget selectCategory(ValueNotifier<String> selectedCategory) {
-    final List<String> categories = [
-      'All',
-      'Information System',
-      'Computer Science',
-      'Engineering',
-      'Mathematics',
-      'Fiction',
-      'Non-Fiction',
-      'Textbooks',
-      'Reference Materials',
-      'Children’s Books',
-      'Young Adult (YA)',
-      'Science & Technology',
-      'History & Social Studies',
-      'Biographies',
-      'Comics & Graphic Novels'
-    ];
+    return Consumer<BookProvider>(
+      builder: (context, bookProvider, child) {
+        final categories = bookProvider.categories;
 
-    return ValueListenableBuilder<String>(
-      valueListenable: selectedCategory,
-      builder: (context, value, _) {
-        return SizedBox(
-          height: 35,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              final isSelected = value == category;
+        return ValueListenableBuilder<String>(
+          valueListenable: selectedCategory,
+          builder: (context, value, _) {
+            return SizedBox(
+              height: 35,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  final isSelected = value == category;
 
-              return TextButton(
-                style: TextButton.styleFrom(
-                  backgroundColor: isSelected
-                      ? AdminColor.secondaryBackgroundColor
-                      : Colors.grey[200],
-                  foregroundColor: isSelected ? Colors.white : Colors.black87,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                onPressed: () => selectedCategory.value = category,
-                child: Text(
-                  category,
-                  style: GoogleFonts.poppins(fontSize: 12),
-                ),
-              );
-            },
-          ),
+                  return TextButton(
+                    style: TextButton.styleFrom(
+                      backgroundColor: isSelected
+                          ? AdminColor.secondaryBackgroundColor
+                          : Colors.grey[200],
+                      foregroundColor:
+                          isSelected ? Colors.white : Colors.black87,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    onPressed: () => selectedCategory.value = category,
+                    child: Text(
+                      category,
+                      style: GoogleFonts.poppins(fontSize: 12),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -97,7 +89,7 @@ class UIComponents {
           Text(
             title,
             style:
-                GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+                GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           TextButton(
             onPressed: () {
@@ -197,6 +189,14 @@ class UIComponents {
   }
 
   static Widget _bookTile(String title, String copies, String imagePath) {
+    print('\nBuilding book tile for: $title');
+    print('Image path type: ${imagePath.startsWith('assets/') ? 'asset' : 'base64'}');
+    
+    if (!imagePath.startsWith('assets/')) {
+      print('Base64 image length: ${imagePath.length}');
+      print('Base64 image data: ${imagePath.substring(0, min(50, imagePath.length))}...');
+    }
+
     return Container(
       width: 100,
       margin: const EdgeInsets.only(right: 10),
@@ -204,18 +204,61 @@ class UIComponents {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Image Container
-          Container(
-            width: 100, // Width of the image container
-            height: 130, // Height of the image container
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(
-                image: AssetImage(imagePath), // Image from the path
-                fit: BoxFit.cover, // Fit the image
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 100,
+              height: 130,
+              color: Colors.grey[200],
+              child: imagePath.startsWith('assets/')
+                  ? Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        print('Error loading asset image: $error');
+                        return const Center(
+                          child: Icon(Icons.book, color: Colors.grey),
+                        );
+                      },
+                    )
+                  : Builder(
+                      builder: (context) {
+                        try {
+                          print('Attempting to decode base64 image');
+                          
+                          // Clean the base64 string if it contains the data URI prefix
+                          String cleanBase64 = imagePath;
+                          if (imagePath.contains('base64,')) {
+                            cleanBase64 = imagePath.split('base64,').last;
+                          }
+                          
+                          print('Cleaned base64 string length: ${cleanBase64.length}');
+                          final Uint8List bytes = base64Decode(cleanBase64);
+                          print('Successfully decoded base64 data, bytes length: ${bytes.length}');
+                          
+                          return Image.memory(
+                            bytes,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('Error loading base64 image: $error');
+                              print('Stack trace: $stackTrace');
+                              return const Center(
+                                child: Icon(Icons.book, color: Colors.grey),
+                              );
+                            },
+                          );
+                        } catch (e) {
+                          print('Error decoding base64 image: $e');
+                          print('Problematic image data: ${imagePath.substring(0, min(50, imagePath.length))}...');
+                          return const Center(
+                            child: Icon(Icons.book, color: Colors.grey),
+                          );
+                        }
+                      },
+                    ),
             ),
           ),
-          const SizedBox(height: 5), // Reduce the gap between image and text
+          const SizedBox(height: 5),
 
           // Title Text
           Text(
@@ -225,7 +268,7 @@ class UIComponents {
               fontWeight: FontWeight.bold,
             ),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis, // Handle overflow with ellipsis
+            overflow: TextOverflow.ellipsis,
           ),
 
           Text(
@@ -237,6 +280,44 @@ class UIComponents {
           ),
         ],
       ),
+    );
+  }
+
+  static void showBookDetailModal(BuildContext context, dynamic book) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Required for full height
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  BookDetailContent(
+                    book: book,
+                    showReserveButton: false,
+                    showFavoriteButton: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

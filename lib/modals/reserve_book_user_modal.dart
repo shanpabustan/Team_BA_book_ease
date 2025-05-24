@@ -5,11 +5,12 @@ void showReservationConfirmationModal(BuildContext context,
     {required VoidCallback onConfirm}) {
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return CustomActionModal(
         title: 'Confirm Reservation',
         message:
-            'Are you sure you want to reserve this book? This action cannot be undone.',
+            'Are you sure you want to reserve this book?',
         iconPath: 'assets/icons/book_reservation_icon.svg',
         onCancel: () => Navigator.pop(context),
         onConfirm: () {

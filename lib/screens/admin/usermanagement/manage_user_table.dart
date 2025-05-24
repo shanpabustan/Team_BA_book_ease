@@ -3,6 +3,7 @@ import 'package:book_ease/screens/admin/components/action_buttons.dart';
 import 'package:book_ease/screens/admin/usermanagement/view_user.dart';
 import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -106,7 +107,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             padding: const EdgeInsets.fromLTRB(15, 15, 15, 10),
             width: double.infinity,
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: SvgLoadingScreen())
                 : Column(
                     children: [
                       _buildHeaderRow(),
@@ -133,7 +134,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
             await ExportService.exportToPdf(
               title: 'Users Report',
-              headers: ['User ID', 'Name', 'Email', 'Course', 'Year Level', 'Status'],
+              headers: [
+                'User ID',
+                'Name',
+                'Email',
+                'Course',
+                'Year Level',
+                'Status'
+              ],
               data: ExportService.formatUserData(selectedUsers),
               fileName: 'users_report',
             );
@@ -144,7 +152,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
             await ExportService.exportToExcel(
               title: 'Users',
-              headers: ['User ID', 'Name', 'Email', 'Course', 'Year Level', 'Status'],
+              headers: [
+                'User ID',
+                'Name',
+                'Email',
+                'Course',
+                'Year Level',
+                'Status'
+              ],
               data: ExportService.formatUserData(selectedUsers),
               fileName: 'users_report',
             );
@@ -290,9 +305,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 showDialog(
                   context: context,
                   builder: (_) => UnblockDataModal(
-                    onCancel: () => Navigator.pop(context), // Close the modal on cancel
+                    onCancel: () =>
+                        Navigator.pop(context), // Close the modal on cancel
                     onUnblock: () async {
-                      final userId = user['userId']; // Get userId from the user data
+                      final userId =
+                          user['userId']; // Get userId from the user data
                       try {
                         final response = await Dio().put(
                           '${ApiConfig.baseUrl}/admin/unblock-student/$userId', // Corrected URL
@@ -309,7 +326,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           showErrorSnackBar(
                             context,
                             title: 'Error',
-                            message: 'Failed to unblock user: ${response.statusMessage}',
+                            message:
+                                'Failed to unblock user: ${response.statusMessage}',
                           );
                         }
                       } catch (e) {

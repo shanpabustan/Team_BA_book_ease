@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'package:book_ease/main.dart';
 import 'package:book_ease/screens/user/app_text_styles.dart';
+//import 'package:book_ease/modals/cancel_borrow_modal.dart';
 import 'package:book_ease/utils/navigator_helper.dart';
 import 'package:book_ease/utils/search_borrow_screen.dart';
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:book_ease/models/borrowed_book.dart';
 import 'package:book_ease/services/borrowed_books_service.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/user_data.dart' hide BorrowedBook;
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class MyBooksScreen extends StatefulWidget {
   const MyBooksScreen({super.key});
@@ -24,10 +28,10 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
 
   final List<String> categories = [
     "All",
-    "Pending",
-    "Canceled",
+    "To Return",
+    "To Pick Up",
     "Returned",
-    "Unreturned",
+    "Picked Up",
     "Overdue"
   ];
 
@@ -68,7 +72,7 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
     } catch (e) {
       print('Error in _fetchBorrowedBooks: $e');
       setState(() {
-        error = e.toString();
+        error = 'Failed to load books. Please try again.';
         isLoading = false;
       });
     }
@@ -78,84 +82,13 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(55),
-        child: AppBar(
-          backgroundColor: secondaryColor,
-          elevation: 0.5,
-          centerTitle: true,
-          title: Text(
-            "Borrowed Books",
-            style: AppTextStyles.appBarTitle.copyWith(
-              color: Colors.white, // Add color override if needed
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white24,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.search, color: Colors.white, size: 20),
-                  onPressed: () {
-                    fadePush(context, const SearchBorrowScreen());
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: Column(
         children: [
-          // CATEGORY TABS
-          SizedBox(
-            height: 50,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = selectedCategoryIndex == index;
-
-                return TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor:
-                        isSelected ? secondaryColor : Colors.grey[200],
-                    foregroundColor: isSelected ? Colors.white : Colors.black87,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      selectedCategoryIndex = index;
-                    });
-                    _fetchBorrowedBooks();
-                  },
-                  child: Text(
-                    category,
-                    style: GoogleFonts.poppins(fontSize: 12),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // BOOK LIST
+          _buildCategoryTabs(),
           Expanded(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const SvgLoadingScreen()
                 : error != null
                     ? Center(
                         child: Column(
@@ -191,129 +124,169 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
                               ],
                             ),
                           )
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(12),
-                            itemCount: borrowedBooks.length,
-                            separatorBuilder: (_, __) =>
-                                const Divider(height: 30, thickness: 1),
-                            itemBuilder: (context, index) {
-                              final book = borrowedBooks[index];
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Debug print for image URL
-                                  Builder(builder: (context) {
-                                    final cleanedImageUrl =
-                                        _cleanImageUrl(book.picture);
-                                    print(
-                                        'Debug - Book ${book.title} original image URL: ${book.picture}');
-                                    print(
-                                        'Debug - Book ${book.title} cleaned image URL: $cleanedImageUrl');
+                        : _buildBookList(),
+          )
+        ],
+      ),
+    );
+  }
 
-                                    return Image.network(
-                                      cleanedImageUrl.isNotEmpty
-                                          ? cleanedImageUrl
-                                          : 'https://via.placeholder.com/60x90?text=No+Image',
-                                      width: 60,
-                                      height: 90,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        print(
-                                            'Debug - Image error for ${book.title}: $error');
-                                        return Container(
-                                          width: 60,
-                                          height: 90,
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[200],
-                                            border: Border.all(
-                                                color: Colors.grey[300]!),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.book_outlined,
-                                                  color: Colors.grey[400],
-                                                  size: 24),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'No Image',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.grey[600],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  }),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          book.title,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text.rich(
-                                          TextSpan(
-                                            children: [
-                                              const TextSpan(
-                                                  text: "Borrow Date: "),
-                                              TextSpan(
-                                                text: book.borrowDate
-                                                    .toString()
-                                                    .split(' ')[0],
-                                                style: const TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Text.rich(
-                                          TextSpan(
-                                            children: [
-                                              const TextSpan(
-                                                  text: "Due Date: "),
-                                              TextSpan(
-                                                text: book.dueDate
-                                                    .toString()
-                                                    .split(' ')[0],
-                                                style: const TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    book.status,
-                                    style: TextStyle(
-                                      color: _getStatusColor(book.status),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
+  PreferredSizeWidget _buildAppBar() {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(55),
+      child: AppBar(
+        backgroundColor: secondaryColor,
+        elevation: 0.5,
+        centerTitle: true,
+        title: Text(
+          "My Books",
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white24,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.search, color: Colors.white, size: 20),
+                onPressed: () => fadePush(context, const SearchBorrowScreen()),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs() {
+    return SizedBox(
+      height: 50,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final isSelected = selectedCategoryIndex == index;
+          return TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: isSelected ? secondaryColor : Colors.grey[200],
+              foregroundColor: isSelected ? Colors.white : Colors.black87,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                selectedCategoryIndex = index;
+              });
+              _fetchBorrowedBooks();
+            },
+            child: Text(categories[index],
+                style: GoogleFonts.poppins(fontSize: 12)),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBookList() {
+    return ListView.separated(
+      padding: const EdgeInsets.all(12),
+      itemCount: borrowedBooks.length,
+      separatorBuilder: (_, __) => const Divider(height: 30, thickness: 1),
+      itemBuilder: (context, index) {
+        final book = borrowedBooks[index];
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildBookImage(book),
+            const SizedBox(width: 12),
+            _buildBookDetails(book),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  book.status,
+                  style: TextStyle(
+                    color: _getStatusColor(book.status),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBookImage(BorrowedBook book) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Image.network(
+        _cleanImageUrl(book.picture).isNotEmpty
+            ? _cleanImageUrl(book.picture)
+            : 'https://via.placeholder.com/60x90?text=No+Image',
+        width: 60,
+        height: 90,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 60,
+            height: 90,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.book_outlined, color: Colors.grey[400], size: 24),
+                const SizedBox(height: 4),
+                Text('No Image',
+                    style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBookDetails(BorrowedBook book) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(book.title,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 6),
+          Text.rich(TextSpan(children: [
+            const TextSpan(text: "Borrow Date: "),
+            TextSpan(
+              text: book.borrowDate.toString().split(' ')[0],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ])),
+          Text.rich(TextSpan(children: [
+            const TextSpan(text: "Due Date: "),
+            TextSpan(
+              text: book.dueDate.toString().split(' ')[0],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ])),
         ],
       ),
     );
@@ -323,13 +296,13 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
     switch (status) {
       case "Returned":
         return Colors.teal;
-      case "Unreturned":
+      case "To Return":
         return Colors.blue;
       case "Overdue":
         return Colors.red;
-      case "Pending":
+      case "To Pick Up":
         return Colors.orange;
-      case "Canceled":
+      case "Cancelled":
         return Colors.grey;
       default:
         return Colors.black;
@@ -338,8 +311,7 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
 
   String _cleanImageUrl(String url) {
     if (url.startsWith('data:image')) {
-      // Remove duplicate data:image/jpeg;base64, prefixes
-      final prefixPattern = 'data:image/jpeg;base64,';
+      const prefixPattern = 'data:image/jpeg;base64,';
       final lastIndex = url.lastIndexOf(prefixPattern);
       if (lastIndex != -1) {
         return url.substring(lastIndex);

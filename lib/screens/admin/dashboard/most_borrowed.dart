@@ -1,3 +1,4 @@
+import 'package:book_ease/widgets/svg_loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart'; // Your DashboardTheme
 import 'package:book_ease/screens/admin/admin_theme.dart';
@@ -82,9 +83,11 @@ class _MostBorrowedBooksState extends State<MostBorrowedBooks> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 if (isLoading)
-                  const Center(child: CircularProgressIndicator())
+                  const SizedBox(
+                    height: 350,
+                    child: Center(child: SvgLoadingScreen()),
+                  )
                 else if (error != null)
                   Center(
                     child: Text(
@@ -129,16 +132,14 @@ class _MostBorrowedBooksState extends State<MostBorrowedBooks> {
                                     ),
                                   ),
                                   const SizedBox(width: 15),
-
                                   ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(5),
                                     child: book.getImageWidget(
                                       width: 50,
-                                      height: 60,
+                                      height: 65,
                                     ),
                                   ),
                                   const SizedBox(width: 15),
-
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment:
@@ -167,7 +168,6 @@ class _MostBorrowedBooksState extends State<MostBorrowedBooks> {
                               ),
                             );
                           }).toList(),
-
                           if (books!.length > displayedCount) ...[
                             const SizedBox(height: 20),
                             Center(

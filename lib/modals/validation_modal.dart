@@ -36,14 +36,6 @@ class ValidationModal extends StatelessWidget {
                         color: Color(0xFF1C0E4B),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.black,
-                        size: 25, // Increased size for a bolder appearance
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
