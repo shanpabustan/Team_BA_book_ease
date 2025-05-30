@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:book_ease/provider/book_provider.dart';
 import 'package:book_ease/screens/user/library/book_tile.dart';
-import 'package:book_ease/provider/book_data.dart';
 
 class BookGrid extends StatelessWidget {
   final String userId;

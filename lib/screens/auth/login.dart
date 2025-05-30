@@ -138,19 +138,37 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           switch (code) {
             case "401":
-              //showErrorSnackBar(context, title: "Login Failed", message: message);
+              showErrorSnackBar(context, 
+                title: "Login Failed", 
+                message: "Invalid user ID or password");
+              break;
+            case "406":
+              // Semester end case - message includes the end date
+              showWarningSnackBar(context,
+                title: "Semester End", 
+                message: message); // Using the full message that includes the date
               break;
             case "403":
-              showWarningSnackBar(context,
-                  title: "Account Blocked", message: message);
+              // Check if message contains overdue books information
+              if (message.contains("overdue books")) {
+                showWarningSnackBar(context,
+                  title: "Account Blocked", 
+                  message: message); // Using the full message that includes the count
+              } else {
+                showWarningSnackBar(context,
+                  title: "Account Blocked", 
+                  message: "Your account is currently disabled. Please contact the library administrator for assistance.");
+              }
               break;
-            case "400":
-              showWarningSnackBar(context,
-                  title: "Invalid Request", message: message);
+            case "500":
+              showErrorSnackBar(context,
+                title: "Server Error", 
+                message: "An unexpected error occurred. Please try again later.");
               break;
             default:
               showErrorSnackBar(context,
-                  title: "Login Failed", message: message);
+                title: "Login Failed", 
+                message: message);
           }
         }
       }

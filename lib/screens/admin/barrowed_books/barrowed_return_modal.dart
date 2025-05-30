@@ -6,6 +6,9 @@ import 'package:book_ease/screens/admin/barrowed_books/barrowed_return_controlle
 import 'package:book_ease/widgets/admin_small_button_widget.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/warning_snack_bar.dart';
 
 class ReturnBookModal extends StatefulWidget {
   final BorrowedBookAdmin returnData;
@@ -27,121 +30,146 @@ class _ReturnBookModalState extends State<ReturnBookModal> with ReturnController
     penaltyController.text = widget.returnData.penalty.toString();
   }
 
-  void showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.3),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Center(
-                    child: Text(
-                      'Return Book',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Dialog(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Center(
+                  child: Text(
+                    'Return Book',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                buildReadOnlyField('Borrow ID', widget.returnData.borrowID.toString()),
+                buildReadOnlyField(
+                  'Due Date',
+                  widget.returnData.dueDate != null
+                      ? DateFormat('MM-dd-yy').format(DateTime.parse(widget.returnData.dueDate!))
+                      : 'N/A',
+                ),
+                buildReadOnlyField(
+                  'Return Date',
+                  selectedReturnDate != null
+                      ? DateFormat('MM-dd-yy hh:mm a').format(selectedReturnDate!)
+                      : 'Will be set upon return',
+                ),
+                buildReadOnlyField('Book Condition (Before)', widget.returnData.conditionBefore ?? 'N/A'),
+                buildConditionDropdown(),
+                buildPenaltyField(),
+                const SizedBox(height: 24),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CustomSmallButton(
+                      text: 'Cancel',
+                      onPressed: () => Navigator.pop(context),
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      borderColor: Colors.grey.shade300,
+                      hoverColor: Colors.grey.shade200,
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(width: 12),
+                    CustomSmallButton(
+                      text: 'Returned',
+                      onPressed: () async {
+                        // Begin validation
+                        if (!_formKey.currentState!.validate()) {
+                          return showWarningSnackBar(
+                            context,
+                            title: "Validation Error",
+                            message: "Please check all required fields",
+                          );
+                        }
 
-                  buildReadOnlyField('Borrow ID', widget.returnData.borrowID.toString()),
-                  buildReadOnlyField(
-                    'Due Date',
-                    widget.returnData.dueDate != null
-                        ? DateFormat('MM-dd-yy').format(DateTime.parse(widget.returnData.dueDate!))
-                        : 'N/A',
-                  ),
+                        if (selectedCondition == null) {
+                          return showWarningSnackBar(
+                            context,
+                            title: "Missing Information",
+                            message: "Please select the book's condition",
+                          );
+                        }
 
-                  // Automatically handled return date — display only
-                  buildReadOnlyField(
-                    'Return Date',
-                    selectedReturnDate != null
-                        ? DateFormat('MM-dd-yy hh:mm a').format(selectedReturnDate!)
-                        : 'Will be set upon return',
-                  ),
+                        final penaltyAmount = double.tryParse(penaltyController.text) ?? 0.0;
+                        if (selectedCondition == 'Damaged' && penaltyAmount <= 0) {
+                          return showWarningSnackBar(
+                            context,
+                            title: "Validation Error",
+                            message: "Penalty amount is required for damaged books",
+                          );
+                        }
 
-                  buildReadOnlyField('Book Condition (Before)', widget.returnData.conditionBefore ?? 'N/A'),
-                  buildConditionDropdown(),
+                        setState(() {
+                          isReturning = true;
+                          selectedReturnDate = DateTime.now();
+                        });
 
-                  buildPenaltyField(),
+                        try {
+                          final response = await Dio().put(
+                            '${ApiConfig.baseUrl}/admin/return-book/${widget.returnData.borrowID}',
+                            data: {
+                              "book_condition_after": selectedCondition,
+                              "penalty_amount": penaltyAmount,
+                              "return_date": selectedReturnDate!.toIso8601String(),
+                            },
+                          );
 
-                  const SizedBox(height: 24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      CustomSmallButton(
-                        text: 'Cancel',
-                        onPressed: () => Navigator.pop(context),
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black,
-                        borderColor: Colors.grey.shade300,
-                        hoverColor: Colors.grey.shade200,
-                      ),
-                      const SizedBox(width: 12),
-                      CustomSmallButton(
-                        text: 'Returned',
-                        onPressed: () async {
-                          if (_formKey.currentState!.validate() &&
-                              selectedCondition != null) {
-                            
-                            setState(() {
-                              selectedReturnDate = DateTime.now(); // Set actual return time
+                          if (response.statusCode == 200) {
+                            if (!mounted) return;
+                            Navigator.pop(context, {
+                              'returnDate': selectedReturnDate,
+                              'bookConditionAfter': selectedCondition,
+                              'penaltyAmount': penaltyController.text,
+                              'success': true,
                             });
-
-                            try {
-                              final borrowId = widget.returnData.borrowID;
-                              final response = await Dio().put(
-                                '${ApiConfig.baseUrl}/admin/return-book/$borrowId',
-                                data: {
-                                  "book_condition_after": selectedCondition,
-                                  "penalty_amount": double.tryParse(penaltyController.text) ?? 0.0,
-                                  "return_date": selectedReturnDate!.toIso8601String(),
-                                },
-                              );
-
-                              if (response.statusCode == 200) {
-                                Navigator.pop(context, {
-                                  'returnDate': selectedReturnDate,
-                                  'bookConditionAfter': selectedCondition,
-                                  'penaltyAmount': penaltyController.text,
-                                  'success': true,
-                                });
-                                showSnackBar("Book returned successfully!");
-                              } else {
-                                showSnackBar("Return failed: ${response.data['message']}");
-                              }
-                            } catch (e) {
-                              debugPrint("ReturnBookModal Error: $e");
-                              showSnackBar("Something went wrong. Please try again.");
-                            }
+                          } else {
+                            throw Exception(response.data['message'] ?? 'Failed to return book');
                           }
-                        },
-                        backgroundColor: AdminColor.secondaryBackgroundColor,
-                        textColor: Colors.white,
-                        borderColor: AdminColor.secondaryBackgroundColor,
-                        hoverColor: AdminColor.secondaryBackgroundColor.withOpacity(0.85),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                        } on DioException catch (e) {
+                          final errorMessage = e.response?.data?['message'] ??
+                              e.message ??
+                              'Network error occurred';
+                          if (!mounted) return;
+                          showErrorSnackBar(
+                            context,
+                            title: "Return Failed",
+                            message: errorMessage,
+                          );
+                          debugPrint("ReturnBookModal DioError: ${e.toString()}");
+                        } catch (e) {
+                          if (!mounted) return;
+                          showErrorSnackBar(
+                            context,
+                            title: "Error",
+                            message: e.toString().replaceAll('Exception: ', ''),
+                          );
+                          debugPrint("ReturnBookModal Error: ${e.toString()}");
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              isReturning = false;
+                            });
+                          }
+                        }
+                      },
+                      backgroundColor: AdminColor.secondaryBackgroundColor,
+                      textColor: Colors.white,
+                      borderColor: AdminColor.secondaryBackgroundColor,
+                      hoverColor: AdminColor.secondaryBackgroundColor.withOpacity(0.85),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

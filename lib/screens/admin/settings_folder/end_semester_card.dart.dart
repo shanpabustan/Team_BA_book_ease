@@ -103,10 +103,13 @@ class _EndSemesterCardState extends State<EndSemesterCard> {
   }
 
   Future<void> _selectEndSemesterDate(BuildContext context) async {
+    final DateTime now = DateTime.now();
+    final DateTime initialDate = selectedDate ?? now;
+    
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: initialDate.isBefore(now) ? now : initialDate,
+      firstDate: now,
       lastDate: DateTime(2101),
       builder: (BuildContext context, Widget? child) {
         return Theme(

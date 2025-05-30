@@ -28,10 +28,10 @@ class _MyBooksScreenState extends State<MyBooksScreen> {
 
   final List<String> categories = [
     "All",
-    "To Return",
     "To Pick Up",
-    "Returned",
     "Picked Up",
+    "To Return",
+    "Returned",
     "Overdue"
   ];
 

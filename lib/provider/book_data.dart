@@ -32,15 +32,17 @@ class Book {
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
-    print('Processing book JSON: ${json['title']} - Category: ${json['category']}');
+    print(
+        'Processing book JSON: ${json['title']} - Category: ${json['category']}');
     final category = json['category']?.toString().trim() ?? "Unknown";
     print('Processed category: $category');
-    
+
     // Handle the base64 image data
     String imageData = json['picture'] ?? '';
     print('Raw image data length: ${imageData.length}');
-    print('Raw image data starts with: ${imageData.substring(0, min(50, imageData.length))}');
-    
+    print(
+        'Raw image data starts with: ${imageData.substring(0, min(50, imageData.length))}');
+
     if (imageData.isNotEmpty) {
       if (!imageData.startsWith('data:image')) {
         print('Adding data URI prefix to image');
@@ -51,10 +53,14 @@ class Book {
     } else {
       print('Empty image data received');
     }
-    
+
     print('Final image data length: ${imageData.length}');
-    print('Final image data starts with: ${imageData.substring(0, min(50, imageData.length))}');
-    
+    print(
+        'Final image data starts with: ${imageData.substring(0, min(50, imageData.length))}');
+
+    print('Reserve count from JSON: ${json['reserved_count']}');
+    print('Reserve count from JSON (alt): ${json['reserveCount']}');
+
     return Book(
       bookId: json['book_id'],
       title: json['title'],
@@ -68,7 +74,7 @@ class Book {
       shelfLocation: json['shelf_location'] ?? "Unknown",
       librarySection: json['library_section'] ?? "Unknown",
       category: category,
-      reserveCount: json['reserved_count'] ?? 0,
+      reserveCount: json['reserved_count'] ?? json['reserveCount'] ?? 0,
     );
   }
 
@@ -103,7 +109,6 @@ class BorrowedBook {
   final String librarySection;
   final String description;
 
-
   BorrowedBook({
     required this.bookId,
     required this.title,
@@ -119,23 +124,22 @@ class BorrowedBook {
   });
 
   factory BorrowedBook.fromJson(Map<String, dynamic> json) {
-  String rawImage = json['picture'] ?? '';
-  
+    String rawImage = json['picture'] ?? '';
 
-  final cleanedImage = rawImage.split('base64,').last;
+    final cleanedImage = rawImage.split('base64,').last;
 
-  return BorrowedBook(
-    bookId: json['book_id'],
-    title: json['title'],
-    copies: json['copies'],
-    dueDate: json['due_date'],
-    image: cleanedImage,
-    author: json['author'] ?? "Unknown",
-    year: json['year_published']?.toString() ?? "Unknown",
-    isbn: json['isbn'] ?? "Unknown",
-    shelfLocation: json['shelf_location'] ?? "Unknown",
-    librarySection: json['library_section'] ?? "Unknown",
-    description: json['description'] ?? "No description",
-  );
-}
+    return BorrowedBook(
+      bookId: json['book_id'],
+      title: json['title'],
+      copies: json['copies'],
+      dueDate: json['due_date'],
+      image: cleanedImage,
+      author: json['author'] ?? "Unknown",
+      year: json['year_published']?.toString() ?? "Unknown",
+      isbn: json['isbn'] ?? "Unknown",
+      shelfLocation: json['shelf_location'] ?? "Unknown",
+      librarySection: json['library_section'] ?? "Unknown",
+      description: json['description'] ?? "No description",
+    );
+  }
 }

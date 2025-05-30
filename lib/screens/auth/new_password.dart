@@ -1,3 +1,6 @@
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/warning_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:book_ease/screens/auth/login.dart';
@@ -20,22 +23,27 @@ class NewPasswordScreen extends StatefulWidget {
 
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool isLoading = false;
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
 
   Future<void> _resetPassword() async {
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
+      showWarningSnackBar(
+        context,
+        title: 'Password Mismatch',
+        message: 'Passwords do not match',
       );
       return;
     }
 
     if (passwordController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
+      showWarningSnackBar(
+        context,
+        title: 'Weak Password',
+        message: 'Password must be at least 6 characters',
       );
       return;
     }
@@ -50,14 +58,18 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       );
 
       if (response['retCode'] == '200') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset successful')),
+        showSuccessSnackBar(
+          context,
+          title: 'Success',
+          message: 'Password reset successful',
         );
         Navigator.pushAndRemoveUntil(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const LogBookEaseApp(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const LogBookEaseApp(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return FadeTransition(
                 opacity: animation,
                 child: child,
@@ -68,13 +80,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
           (route) => false,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? 'Failed to reset password')),
+        showErrorSnackBar(
+          context,
+          title: 'Reset Failed',
+          message: response['message'] ?? 'Failed to reset password',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred')),
+      showErrorSnackBar(
+        context,
+        title: 'Unexpected Error',
+        message: 'An error occurred: $e',
       );
     } finally {
       setState(() => isLoading = false);
@@ -145,7 +161,9 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         color: Colors.grey,
                       ),
                       onPressed: () {
@@ -248,4 +266,4 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       ),
     );
   }
-} 
+}

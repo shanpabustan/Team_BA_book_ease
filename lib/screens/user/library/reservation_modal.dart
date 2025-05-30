@@ -96,6 +96,8 @@ void showReservationModal(
 ) {
   DateTime? preferredPickupDate;
   final dateFormat = DateFormat('MMM dd yyyy');
+
+  // _infoRow defined *inside* showReservationModal function
   Widget _infoRow(IconData icon, String label, String value,
       {TextStyle? textStyle}) {
     return Row(
@@ -105,15 +107,16 @@ void showReservationModal(
         SizedBox(width: 8),
         Expanded(
           child: RichText(
+            overflow: TextOverflow.ellipsis, // Added here
+            maxLines: 1, // Added here
             text: TextSpan(
               style: textStyle ??
                   AppTextStyles.body.copyWith(color: Colors.black87),
               children: [
                 TextSpan(
                   text: "$label ",
-                  style: (textStyle ?? AppTextStyles.body).copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: (textStyle ?? AppTextStyles.body)
+                      .copyWith(fontWeight: FontWeight.bold),
                 ),
                 TextSpan(text: value),
               ],
@@ -149,11 +152,13 @@ void showReservationModal(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Calls to _infoRow here — make sure they exist!
                     _infoRow(Icons.menu_book, "Title:", bookTitle,
                         textStyle: AppTextStyles.subTitle),
                     SizedBox(height: 12),
                     _infoRow(Icons.inventory, "Available Copies:", "$copies",
                         textStyle: AppTextStyles.subTitle),
+
                     SizedBox(height: 20),
                     Center(
                       child: ElevatedButton.icon(
@@ -300,5 +305,34 @@ void showReservationModal(
         },
       );
     },
+  );
+}
+
+Widget _infoRow(IconData icon, String label, String value,
+    {TextStyle? textStyle}) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 20, color: AdminColor.secondaryBackgroundColor),
+      SizedBox(width: 8),
+      Expanded(
+        child: RichText(
+          overflow: TextOverflow.ellipsis, // Add this line
+          maxLines: 1, // Add this line
+          text: TextSpan(
+            style:
+                textStyle ?? AppTextStyles.body.copyWith(color: Colors.black87),
+            children: [
+              TextSpan(
+                text: "$label ",
+                style: (textStyle ?? AppTextStyles.body)
+                    .copyWith(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: value),
+            ],
+          ),
+        ),
+      ),
+    ],
   );
 }

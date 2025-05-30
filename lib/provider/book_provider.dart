@@ -11,6 +11,8 @@ class BookProvider with ChangeNotifier {
 
   bool _isLoading = false;
 
+  
+
   List<Book> get books => _books;
   List<BorrowedBook> get borrowedBooks => _borrowedBooks;
   List<Book> get recommendedBooks => _recommendedBooks;
@@ -102,7 +104,7 @@ class BookProvider with ChangeNotifier {
       print('\n=== Recommended Books API Response ===');
       print('Status Code: ${response.statusCode}');
       print('Response Data Type: ${response.data.runtimeType}');
-      print('Response Data: ${response.data}');
+      print('Full Response Data: ${response.data}');
 
       if (response.statusCode == 200) {
         final responseData = response.data;
@@ -119,13 +121,22 @@ class BookProvider with ChangeNotifier {
           } else if (data is List) {
             _recommendedBooks = data.map((json) {
               try {
-                print('Processing recommended book: $json');
+                print('\nProcessing recommended book:');
+                print('Book title: ${json['title']}');
+                print('All available fields: ${json.keys.toList()}');
+                print('Reserve count from API: ${json['reserved_count']}');
+                print('Alternative reserve count fields:');
+                print('- reserve_count: ${json['reserve_count']}');
+                print('- reserveCount: ${json['reserveCount']}');
+                print('- reservedCount: ${json['reservedCount']}');
                 // Ensure picture field exists and is not null
                 if (json['picture'] == null) {
                   print('Picture is null for book: ${json['title']}');
                   json['picture'] = ''; // Set empty string as default
                 }
-                return Book.fromJson(json);
+                final book = Book.fromJson(json);
+                print('Parsed book reserve count: ${book.reserveCount}');
+                return book;
               } catch (e) {
                 print('Error parsing recommended book: $e');
                 print('Problematic book data: $json');

@@ -301,25 +301,27 @@ class _BorrowedBooksTableScreenState extends State<BorrowedBooksTableScreen> {
               message: 'Return',
               child: IconButton(
                 icon: const Icon(Icons.library_books, size: 20),
-                onPressed: () async {
-                  final result = await showDialog(
+                onPressed: () {
+                  if (!context.mounted) return;
+                  
+                  showDialog(
                     context: context,
                     barrierDismissible: false,
-                    builder: (context) => ReturnBookModal(
+                    builder: (BuildContext dialogContext) => ReturnBookModal(
                       returnData: borrowedBook,
                     ),
-                  );
-
-                  if (result != null && result['success'] == true) {
-                    if (context.mounted) {
-                      showSuccessSnackBar(
-                        context,
-                        title: 'Success!',
-                        message: 'Book returned successfully.',
-                      );
-                      fetchBorrowedBooks(); // Refresh after return
+                  ).then((result) {
+                    if (result != null && result['success'] == true) {
+                      if (context.mounted) {
+                        showSuccessSnackBar(
+                          context,
+                          title: 'Success!',
+                          message: 'Book returned successfully.',
+                        );
+                        fetchBorrowedBooks(); // Refresh after return
+                      }
                     }
-                  }
+                  });
                 },
               ),
             ),

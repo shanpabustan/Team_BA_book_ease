@@ -1,4 +1,6 @@
+import 'package:book_ease/provider/book_data.dart';
 import 'package:book_ease/screens/user/app_text_styles.dart';
+import 'package:book_ease/screens/user/user_components/book_detail_modal.dart';
 import 'package:book_ease/screens/user/user_components/home_components.dart';
 import 'package:flutter/material.dart';
 import 'package:book_ease/provider/book_provider.dart';
@@ -11,39 +13,27 @@ import 'package:book_ease/screens/admin/admin_theme.dart';
 
 class SeeAllScreen extends StatelessWidget {
   final String category;
+  final String? userId; // Added nullable userId to be passed optionally
 
-  const SeeAllScreen({super.key, required this.category});
+  const SeeAllScreen({
+    super.key,
+    required this.category,
+    this.userId, // Optional, only needed for Recommendations
+  });
 
   Uint8List decodeBase64Image(String base64String) {
     try {
-      print('Decoding base64 image');
-      print('Input string length: ${base64String.length}');
-      print(
-          'Input string starts with: ${base64String.substring(0, min(50, base64String.length))}');
-
       if (base64String.isEmpty) {
-        print('Empty image string received');
         throw Exception('Empty image string');
       }
 
-      // If the string already has the data URI prefix, split it
       if (base64String.contains('base64,')) {
-        print('Found base64 prefix, splitting string');
-        final decoded = base64Decode(base64String.split('base64,').last);
-        print('Successfully decoded image, length: ${decoded.length}');
-        return decoded;
+        return base64Decode(base64String.split('base64,').last);
       }
 
-      // If it's just the base64 string, decode it directly
-      print('No base64 prefix found, decoding directly');
-      final decoded = base64Decode(base64String);
-      print('Successfully decoded image, length: ${decoded.length}');
-      return decoded;
+      return base64Decode(base64String);
     } catch (e) {
-      print('Error decoding image: $e');
-      print(
-          'Problematic string: ${base64String.substring(0, min(50, base64String.length))}...');
-      // Return a default empty image
+      // Return empty Uint8List on error to avoid crash
       return Uint8List.fromList([]);
     }
   }
@@ -61,9 +51,7 @@ class SeeAllScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           category,
-          style: AppTextStyles.appBarTitle.copyWith(
-            color: Colors.white,
-          ),
+          style: AppTextStyles.appBarTitle.copyWith(color: Colors.white),
         ),
       ),
       body: isBorrowed
@@ -111,7 +99,6 @@ class SeeAllScreen extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Book Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.memory(
@@ -122,31 +109,20 @@ class SeeAllScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Book Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            book.title,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      book.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-
                     Text(
                       "Author: ${book.author}",
                       style: GoogleFonts.poppins(
@@ -155,8 +131,6 @@ class SeeAllScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-
-                    // Due Date + View Button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -168,12 +142,16 @@ class SeeAllScreen extends StatelessWidget {
                           ),
                         ),
                         OutlinedButton(
-                          onPressed: () =>
-                              UIComponents.showBookDetailModal(context, book),
+                          onPressed: () {
+                            showBookDetailsModal(
+                              context: context,
+                              book: book,
+                              userId: userId ?? '',
+                            );
+                          },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 15), // Tighter padding
+                                horizontal: 15, vertical: 15),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -216,6 +194,7 @@ class SeeAllScreen extends StatelessWidget {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
+
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(12),
@@ -233,7 +212,6 @@ class SeeAllScreen extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Book Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.memory(
@@ -252,31 +230,20 @@ class SeeAllScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Book Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            book.title,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      book.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-
                     Text(
                       "Author: ${book.author}",
                       style: GoogleFonts.poppins(
@@ -285,8 +252,6 @@ class SeeAllScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-
-                    // Available Copies + View Button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -301,14 +266,35 @@ class SeeAllScreen extends StatelessWidget {
                             softWrap: false,
                           ),
                         ),
-                        const SizedBox(width: 8), // Small spacing
+                        const SizedBox(width: 8),
                         OutlinedButton(
-                          onPressed: () =>
-                              UIComponents.showBookDetailModal(context, book),
+                          onPressed: () {
+                            final bookMap = {
+                              'book_id': book.bookId,
+                              'title': book.title,
+                              'author': book.author,
+                              'total_copies': book.copies,
+                              'year_published': book.year,
+                              'description': book.description,
+                              'picture': book.image,
+                              'isbn': book.isbn,
+                              'shelf_location': book.shelfLocation,
+                              'library_section': book.librarySection,
+                              'category': book.category,
+                              //'reserveCount': book.reserveCount,
+                            };
+
+                            final bookObj = Book.fromJson(bookMap);
+
+                            showBookDetailsModal(
+                              context: context,
+                               book: book,
+                              userId: userId ?? '',
+                            );
+                          },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 15), // Tighter padding
+                                horizontal: 15, vertical: 15),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -322,7 +308,7 @@ class SeeAllScreen extends StatelessWidget {
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -351,6 +337,7 @@ class SeeAllScreen extends StatelessWidget {
       itemCount: books.length,
       itemBuilder: (context, index) {
         final book = books[index];
+
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(12),
@@ -368,7 +355,6 @@ class SeeAllScreen extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Book Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.memory(
@@ -387,31 +373,20 @@ class SeeAllScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Book Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            book.title,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      book.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-
                     Text(
                       "Author: ${book.author}",
                       style: GoogleFonts.poppins(
@@ -420,25 +395,49 @@ class SeeAllScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-
-                    // Available Copies + View Button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "${book.copies} copies available",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.green,
+                        Flexible(
+                          child: Text(
+                            "${book.copies} copies available",
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.green,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                           ),
                         ),
+                        const SizedBox(width: 8),
                         OutlinedButton(
-                          onPressed: () =>
-                              UIComponents.showBookDetailModal(context, book),
+                          onPressed: () {
+                            final bookMap = {
+                              'book_id': book.bookId,
+                              'title': book.title,
+                              'author': book.author,
+                              'total_copies': book.copies,
+                              'year_published': book.year,
+                              'description': book.description,
+                              'picture': book.image,
+                              'isbn': book.isbn,
+                              'shelf_location': book.shelfLocation,
+                              'library_section': book.librarySection,
+                              'category': book.category,
+                              //'reserveCount': book.reserveCount ?? 0,
+                            };
+
+                            final bookObj = Book.fromJson(bookMap);
+
+                            showBookDetailsModal(
+                              context: context,
+                               book: book,
+                              userId: userId ?? '',
+                            );
+                          },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 15), // Tighter padding
+                                horizontal: 15, vertical: 15),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -466,8 +465,12 @@ class SeeAllScreen extends StatelessWidget {
   Widget _buildComingSoonMessage() {
     return const Center(
       child: Text(
-        'Books for this category will be shown soon.',
-        style: TextStyle(fontSize: 15, color: Colors.grey),
+        "Coming soon...",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey,
+        ),
       ),
     );
   }

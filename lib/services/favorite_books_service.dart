@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:book_ease/provider/book_data.dart';
 
 class FavoriteBooksService {
   static String _getFavoritesKey(String userId) => 'favorite_books_$userId';
@@ -9,13 +8,13 @@ class FavoriteBooksService {
   static Future<List<Map<String, dynamic>>> getFavoriteBooks() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('current_user_id');
-    
+
     if (userId == null) {
       return [];
     }
 
     final String? favoritesJson = prefs.getString(_getFavoritesKey(userId));
-    
+
     if (favoritesJson == null) {
       return [];
     }
@@ -34,13 +33,14 @@ class FavoriteBooksService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('current_user_id');
-      
+
       if (userId == null) {
         return false;
       }
 
-      final List<Map<String, dynamic>> currentFavorites = await getFavoriteBooks();
-      
+      final List<Map<String, dynamic>> currentFavorites =
+          await getFavoriteBooks();
+
       // Check if book already exists
       if (currentFavorites.any((fav) => fav['isbn'] == book['isbn'])) {
         return false;
@@ -68,9 +68,10 @@ class FavoriteBooksService {
         'category': book['category'] ?? '',
         'dateAdded': DateTime.now().toIso8601String(),
       };
-      
+
       currentFavorites.add(formattedBook);
-      await prefs.setString(_getFavoritesKey(userId), jsonEncode(currentFavorites));
+      await prefs.setString(
+          _getFavoritesKey(userId), jsonEncode(currentFavorites));
       return true;
     } catch (e) {
       print('Error adding to favorites: $e');
@@ -83,15 +84,17 @@ class FavoriteBooksService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('current_user_id');
-      
+
       if (userId == null) {
         return false;
       }
 
-      final List<Map<String, dynamic>> currentFavorites = await getFavoriteBooks();
-      
+      final List<Map<String, dynamic>> currentFavorites =
+          await getFavoriteBooks();
+
       currentFavorites.removeWhere((book) => book['isbn'] == isbn);
-      await prefs.setString(_getFavoritesKey(userId), jsonEncode(currentFavorites));
+      await prefs.setString(
+          _getFavoritesKey(userId), jsonEncode(currentFavorites));
       return true;
     } catch (e) {
       print('Error removing from favorites: $e');
@@ -110,7 +113,7 @@ class FavoriteBooksService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('current_user_id');
-      
+
       if (userId != null) {
         await prefs.remove(_getFavoritesKey(userId));
       }
@@ -120,10 +123,11 @@ class FavoriteBooksService {
   }
 
   // Get all favorite books for a specific user ID (used for data migration/backup)
-  static Future<List<Map<String, dynamic>>> getFavoriteBooksForUser(String userId) async {
+  static Future<List<Map<String, dynamic>>> getFavoriteBooksForUser(
+      String userId) async {
     final prefs = await SharedPreferences.getInstance();
     final String? favoritesJson = prefs.getString(_getFavoritesKey(userId));
-    
+
     if (favoritesJson == null) {
       return [];
     }
@@ -136,4 +140,4 @@ class FavoriteBooksService {
       return [];
     }
   }
-} 
+}

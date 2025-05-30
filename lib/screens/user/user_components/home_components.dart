@@ -2,12 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:book_ease/provider/book_provider.dart';
+import 'package:book_ease/provider/user_data.dart';
 import 'package:book_ease/screens/admin/admin_theme.dart';
-import 'package:book_ease/screens/user/home/book_details_modal.dart';
 import 'package:book_ease/screens/user/home/see_all_screen.dart';
 import 'package:book_ease/screens/user/user_components/book_detail_helper.dart';
 import 'package:book_ease/utils/navigator_helper.dart';
-//import 'package:book_ease/widgets/search_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -69,18 +68,24 @@ class UIComponents {
     );
   }
 
-  static Widget bookSection(BuildContext context, String category,
-      List<Map<String, String>> Function(String) getBooks) {
+  /// Add optional userId parameter here
+  static Widget bookSection(
+    BuildContext context,
+    String category,
+    List<Map<String, String>> Function(String) getBooks, {
+    String? userId,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionHeader(context, category),
-        _bookList(context, category, getBooks),
+        _bookList(context, category, getBooks, userId: userId),
       ],
     );
   }
 
   static Widget _sectionHeader(BuildContext context, String title) {
+    final userId = Provider.of<UserData>(context, listen: false).userID;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -93,7 +98,7 @@ class UIComponents {
           ),
           TextButton(
             onPressed: () {
-              fadePush(context, SeeAllScreen(category: title));
+              fadePush(context, SeeAllScreen(category: title, userId: userId));
             },
             child: Text(
               'See All',
@@ -105,8 +110,13 @@ class UIComponents {
     );
   }
 
-  static Widget _bookList(BuildContext context, String category,
-      List<Map<String, String>> Function(String) getBooks) {
+  /// Add userId parameter here too
+  static Widget _bookList(
+    BuildContext context,
+    String category,
+    List<Map<String, String>> Function(String) getBooks, {
+    String? userId,
+  }) {
     final bookProvider = Provider.of<BookProvider>(context);
 
     if (category == 'Borrowed Books') {
@@ -128,8 +138,7 @@ class UIComponents {
                 margin: const EdgeInsets.only(right: 10),
                 child: InkWell(
                   onTap: () => showBookDetailModal(context, book),
-                  borderRadius: BorderRadius.circular(
-                      8), // Optional: Matches the image rounding
+                  borderRadius: BorderRadius.circular(8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -182,7 +191,11 @@ class UIComponents {
         itemCount: books.length,
         itemBuilder: (context, index) {
           final book = books[index];
-          return _bookTile(book["title"]!, book["copies"]!, book["image"]!);
+          return _bookTile(
+            book["title"]!, 
+            book["copies"]!, 
+            book["image"]!,
+          );
         },
       ),
     );
@@ -190,11 +203,13 @@ class UIComponents {
 
   static Widget _bookTile(String title, String copies, String imagePath) {
     print('\nBuilding book tile for: $title');
-    print('Image path type: ${imagePath.startsWith('assets/') ? 'asset' : 'base64'}');
-    
+    print(
+        'Image path type: ${imagePath.startsWith('assets/') ? 'asset' : 'base64'}');
+
     if (!imagePath.startsWith('assets/')) {
       print('Base64 image length: ${imagePath.length}');
-      print('Base64 image data: ${imagePath.substring(0, min(50, imagePath.length))}...');
+      print(
+          'Base64 image data: ${imagePath.substring(0, min(50, imagePath.length))}...');
     }
 
     return Container(
@@ -225,17 +240,19 @@ class UIComponents {
                       builder: (context) {
                         try {
                           print('Attempting to decode base64 image');
-                          
+
                           // Clean the base64 string if it contains the data URI prefix
                           String cleanBase64 = imagePath;
                           if (imagePath.contains('base64,')) {
                             cleanBase64 = imagePath.split('base64,').last;
                           }
-                          
-                          print('Cleaned base64 string length: ${cleanBase64.length}');
+
+                          print(
+                              'Cleaned base64 string length: ${cleanBase64.length}');
                           final Uint8List bytes = base64Decode(cleanBase64);
-                          print('Successfully decoded base64 data, bytes length: ${bytes.length}');
-                          
+                          print(
+                              'Successfully decoded base64 data, bytes length: ${bytes.length}');
+
                           return Image.memory(
                             bytes,
                             fit: BoxFit.cover,
@@ -249,7 +266,8 @@ class UIComponents {
                           );
                         } catch (e) {
                           print('Error decoding base64 image: $e');
-                          print('Problematic image data: ${imagePath.substring(0, min(50, imagePath.length))}...');
+                          print(
+                              'Problematic image data: ${imagePath.substring(0, min(50, imagePath.length))}...');
                           return const Center(
                             child: Icon(Icons.book, color: Colors.grey),
                           );
@@ -278,6 +296,8 @@ class UIComponents {
               color: Colors.grey,
             ),
           ),
+
+          // Reserve count display removed
         ],
       ),
     );

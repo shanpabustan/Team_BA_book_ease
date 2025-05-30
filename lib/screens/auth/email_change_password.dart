@@ -2,7 +2,10 @@ import 'package:book_ease/screens/admin/admin_theme.dart';
 import 'package:book_ease/screens/auth/login.dart';
 import 'package:book_ease/screens/auth/verify_reset_code.dart';
 import 'package:book_ease/services/password_reset_service.dart';
+import 'package:book_ease/utils/error_snack_bar.dart';
 import 'package:book_ease/utils/navigator_helper.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
+import 'package:book_ease/utils/warning_snack_bar.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(EmailForgotPassword());
@@ -29,8 +32,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _requestPasswordReset() async {
     if (emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email')),
+      showWarningSnackBar(
+        context,
+        title: 'Missing Information',
+        message: 'Please enter your email',
       );
       return;
     }
@@ -43,21 +48,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
 
       if (response['retCode'] == '200') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reset code sent to your email')),
+        showSuccessSnackBar(
+          context,
+          title: 'Success',
+          message: 'Reset code sent to your email',
         );
         fadePush(
           context,
           VerifyResetCodeScreen(email: emailController.text),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? 'Failed to send reset code')),
+        showErrorSnackBar(
+          context,
+          title: 'Error',
+          message: response['message'] ?? 'Failed to send reset code',
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred')),
+      showErrorSnackBar(
+        context,
+        title: 'Unexpected Error',
+        message: 'An error occurred: $e',
       );
     } finally {
       setState(() => isLoading = false);

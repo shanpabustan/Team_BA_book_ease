@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:book_ease/utils/error_snack_bar.dart';
+import 'package:book_ease/utils/success_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:book_ease/services/favorite_books_service.dart';
@@ -45,23 +47,22 @@ class _FavouriteBooksScreenState extends State<FavouriteBooksScreen> {
 
   Future<void> removeBook(int index) async {
     final book = _favoriteBooks[index];
-    final success = await FavoriteBooksService.removeFromFavorites(book['isbn']);
+    final success =
+        await FavoriteBooksService.removeFromFavorites(book['isbn']);
     if (success) {
       setState(() {
         _favoriteBooks.removeAt(index);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Book removed from favorites'),
-          backgroundColor: Colors.green,
-        ),
+      showSuccessSnackBar(
+        context,
+        title: 'Success',
+        message: 'Book removed from favorites',
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to remove book from favorites'),
-          backgroundColor: Colors.red,
-        ),
+      showErrorSnackBar(
+        context,
+        title: 'Error',
+        message: 'Failed to remove book from favorites',
       );
     }
   }
@@ -69,7 +70,7 @@ class _FavouriteBooksScreenState extends State<FavouriteBooksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AdminColor.lightGreenBackground,
       appBar: AppBar(
         backgroundColor: AdminColor.secondaryBackgroundColor,
         elevation: 0,
@@ -118,135 +119,154 @@ class _FavouriteBooksScreenState extends State<FavouriteBooksScreen> {
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                   itemCount: _favoriteBooks.length,
                   itemBuilder: (context, index) {
                     final book = _favoriteBooks[index];
-                    return Card(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 16),
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Book Cover
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.memory(
-                                base64Decode(book['image'].split(',').last),
-                                width: 100,
-                                height: 150,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    width: 100,
-                                    height: 150,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.book, color: Colors.grey),
-                                  );
-                                },
-                              ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Book Cover
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.memory(
+                              base64Decode(book['image'].split(',').last),
+                              width: 80,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 80,
+                                  height: 120,
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.book,
+                                      color: Colors.grey),
+                                );
+                              },
                             ),
-                            const SizedBox(width: 16),
-                            // Book Details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Title + Delete Icon Row
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          book['title'],
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
-                                          ),
+                          ),
+                          const SizedBox(width: 14),
+
+                          // Book Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Title
+                                Text(
+                                  book['title'],
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+
+                                // Author
+                                Text(
+                                  book['author'],
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+
+                                // Date Added
+                                Text(
+                                  "Date Added: ${DateFormat('MMMM dd, yyyy').format(DateTime.parse(book['dateAdded']))}",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.black45,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // View Details & Delete Button
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    OutlinedButton(
+                                      onPressed: () {
+                                        final bookMap = {
+                                          'book_id': book['book_id'] ?? 0,
+                                          'title': book['title'],
+                                          'author': book['author'],
+                                          'total_copies': book['copies'],
+                                          'year_published': book['year'],
+                                          'description': book['description'],
+                                          'picture': book['image'],
+                                          'isbn': book['isbn'],
+                                          'shelf_location':
+                                              book['shelfLocation'],
+                                          'library_section':
+                                              book['librarySection'],
+                                          'category': book['category'],
+                                          'reserved_count':
+                                              book['reserveCount'],
+                                        };
+
+                                        final bookObj = Book.fromJson(bookMap);
+
+                                        showBookDetailsModal(
+                                          context: context,
+                                          book: bookObj,
+                                          userId: widget.userId,
+                                        );
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(
+                                            color: Color(0xFF9AD3BC)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 10,
+                                        ),
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                      child: Text(
+                                        "View Details",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: const Color(0xFF2B4B50),
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      IconButton(
-                                        onPressed: () => removeBook(index),
-                                        icon: const Icon(Icons.delete_outline),
-                                        color: Colors.red.shade700,
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    book['author'],
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 13,
-                                      color: Colors.black87,
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    "Date Added: ${DateFormat('MMMM dd, yyyy').format(DateTime.parse(book['dateAdded']))}",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: Colors.black45,
+                                    const SizedBox(width: 10),
+                                    IconButton(
+                                      onPressed: () => removeBook(index),
+                                      icon: const Icon(Icons.delete_outline),
+                                      color: Colors.red.shade700,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
                                     ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      // Convert the book map to a Book object
-                                      final bookMap = {
-                                        'book_id': book['book_id'] ?? 0,
-                                        'title': book['title'],
-                                        'author': book['author'],
-                                        'total_copies': book['copies'],
-                                        'year_published': book['year'],
-                                        'description': book['description'],
-                                        'picture': book['image'],
-                                        'isbn': book['isbn'],
-                                        'shelf_location': book['shelfLocation'],
-                                        'library_section': book['librarySection'],
-                                        'category': book['category'],
-                                        'reserved_count': book['reserveCount'],
-                                      };
-                                      
-                                      final bookObj = Book.fromJson(bookMap);
-                                      
-                                      showBookDetailsModal(
-                                        context: context,
-                                        book: bookObj,
-                                        userId: widget.userId,
-                                      );
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(color: Color(0xFF9AD3BC)),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 8,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "View details",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: const Color(0xFF2B4B50),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     );
                   },

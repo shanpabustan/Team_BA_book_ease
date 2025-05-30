@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:book_ease/provider/notification_service.dart'; // Adjust path
 import 'package:book_ease/data/notification_data.dart';
 import 'package:intl/intl.dart';
+import 'package:book_ease/screens/admin/admin_theme.dart';
 
 class NotificationPopup extends StatefulWidget {
   final String userId;
@@ -31,7 +32,17 @@ class _NotificationPopupState extends State<NotificationPopup> {
 
   Future<void> _loadNotifications() async {
     try {
-      final notifications = await _notificationService.fetchNotifications(widget.userId);
+      final notifications =
+          await _notificationService.fetchNotifications(widget.userId);
+
+      // 🧙 Sort notifications by date (ascending)
+      notifications.sort((a, b) {
+        final dateA = DateTime.tryParse(a.createdAt);
+        final dateB = DateTime.tryParse(b.createdAt);
+        if (dateA == null || dateB == null) return 0;
+        return dateB.compareTo(dateA); // Descending: Newest to Oldest
+      });
+
       if (mounted) {
         setState(() {
           _notifications = notifications;
@@ -96,15 +107,17 @@ class _NotificationPopupState extends State<NotificationPopup> {
                               contentPadding: EdgeInsets.zero,
                               leading: const Icon(
                                 Icons.notifications,
-                                color: Colors.blue,
+                                color: AdminColor.secondaryBackgroundColor,
                               ),
                               title: Text(
                                 notif.message,
-                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500),
                               ),
                               subtitle: Text(
                                 _formatTime(notif.createdAt),
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                style: const TextStyle(
+                                    fontSize: 10, color: Colors.grey),
                               ),
                             );
                           },

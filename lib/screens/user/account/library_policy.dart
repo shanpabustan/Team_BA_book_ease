@@ -64,8 +64,6 @@ class LibraryPolicyScreen extends StatelessWidget {
                     'Late returns are marked overdue. Lost or damaged books must be replaced or paid for. After 3 consecutive overdue returns, the student\'s account is blocked and login is disabled.',
               ),
               const SizedBox(height: 20),
-              _helpCard(context),
-              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -119,38 +117,6 @@ class LibraryPolicyScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  static Widget _helpCard(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Redirecting to help...")),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: const [
-            Expanded(
-              child: Text(
-                'Need help?',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 18, color: Colors.black54),
-          ],
-        ),
       ),
     );
   }
